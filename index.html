@@ -10,10 +10,11 @@
     <title>pavlos-web-bootstrap</title>
 </head>
 <body>
-<!-- Navbar injection will occur from main.js -->
+<!-- Navbar component -->
+<app-navbar></app-navbar>
 
-<!-- Language Modal injection -->
-<div id="language-modal-container"></div>
+<!-- Language Modal component (global) -->
+<app-language-modal></app-language-modal>
 
 <!-- Page subject section -->
 <div class="container-fluid text-light d-flex align-items-center justify-content-left"
@@ -163,11 +164,11 @@
 </div>
 <!-- End Transparent Pricing section -->
 
-<!-- WhatsApp Bubble injection -->
-<div id="whatsapp-bubble-container"></div>
+<!-- WhatsApp Bubble component -->
+<app-whatsapp-bubble href="https://wa.me/35796699870"></app-whatsapp-bubble>
 
-<!-- Footer injection-->
-<div id="footer-container"></div>
+<!-- Footer component -->
+<app-footer></app-footer>
 
 <script type="module" src="./src/main.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
