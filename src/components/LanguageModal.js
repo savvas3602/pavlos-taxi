@@ -1,3 +1,7 @@
+// LanguageModal.js - Plain JS component for Vite
+export function createLanguageModal() {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
 <div class="modal fade" id="languageModal" tabindex="-1" aria-labelledby="languageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -15,3 +19,6 @@
         </div>
     </div>
 </div>
+`;
+    return wrapper.firstElementChild;
+}

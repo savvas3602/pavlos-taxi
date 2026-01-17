@@ -1,0 +1,8 @@
+.pav-feature-card {
+    box-sizing: border-box;
+    border: 0.15rem solid transparent;
+    transition: transform 0.5s cubic-bezier(.4,2,.6,1), border-color 0.5s;
+}
+.pav-feature-card:hover, .pav-feature-card:focus-within {
+    border-color: #ffc107 !important; /* Bootstrap warning color */
+}
