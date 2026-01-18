@@ -18,7 +18,7 @@ export function createNavbar() {
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item">
-                    <a class="nav-link" aria-current="page" href="index.html">Home</a>
+                    <a class="nav-link" href="index.html">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="index.html">Airport Transfers</a>
@@ -56,5 +56,33 @@ export function createNavbar() {
         }
     </style>
     `;
+
+    // Navbar active link highlighting based on href
+    const currentPath = window.location.pathname;
+    let pageName = currentPath.split('/').pop().toLowerCase();
+
+    // Default to 'index' if on the root path
+    if (!pageName) pageName = 'index';
+
+    // Remove .html extension for comparison
+    pageName = pageName.replace(/\.html$/, '');
+
+    const links = nav.querySelectorAll('.nav-link');
+    links.forEach(link => {
+        const href = link.getAttribute('href');
+
+        let linkPage = href.split('/').pop().toLowerCase();
+        linkPage = linkPage.replace(/\.html$/, '');
+
+        // Match normalized names (e.g. 'index' === 'index')
+        if (linkPage === pageName) {
+             link.classList.add('active');
+             link.setAttribute('aria-current', 'page');
+        } else {
+             link.classList.remove('active');
+             link.removeAttribute('aria-current');
+        }
+    });
+
     return nav;
 }
