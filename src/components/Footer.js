@@ -22,10 +22,10 @@ export function createFooter() {
             <div class="col-12 col-md-4 mb-4 mb-md-0">
                 <h6 class="fw-bold mb-3 text-light">Quick Links</h6>
                 <ul class="list-unstyled">
-                    <li><a href="#" class="text-decoration-none text-light">Home</a></li>
+                    <li><a href="index.html" class="text-decoration-none text-light">Home</a></li>
                     <li><a href="#" class="text-decoration-none text-light">Services</a></li>
                     <li><a href="fleet.html" class="text-decoration-none text-light">Fleet</a></li>
-                    <li><a href="#" class="text-decoration-none text-light">Contact</a></li>
+                    <li><a href="contact.html" class="text-decoration-none text-light">Contact</a></li>
                 </ul>
             </div>
             <!-- Column 3: Contact Info -->

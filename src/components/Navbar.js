@@ -30,7 +30,7 @@ export function createNavbar() {
                     <a class="nav-link" href="fleet.html">Fleet</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Contact</a>
+                    <a class="nav-link" href="contact.html">Contact</a>
                 </li>
             </ul>
             <div class="d-flex justify-content-end align-items-center ms-auto">
