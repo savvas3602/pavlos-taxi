@@ -9,7 +9,8 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: 'index.html',
-                fleet: 'fleet.html'
+                fleet: 'fleet.html',
+                contact: 'contact.html'
             }
         }
     }
