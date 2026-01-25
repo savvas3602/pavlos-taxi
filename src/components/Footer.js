@@ -19,7 +19,7 @@ export function createFooter() {
                 </p>
             </div>
             <!-- Column 2: Quick Links -->
-            <div class="col-12 col-md-4 mb-4 mb-md-0">
+            <div class="col-12 col-md-4 mb-4 mb-md-0 text-center">
                 <h6 class="fw-bold mb-3 text-light">Quick Links</h6>
                 <ul class="list-unstyled">
                     <li><a href="index.html" class="text-decoration-none text-light">Home</a></li>
@@ -29,7 +29,7 @@ export function createFooter() {
                 </ul>
             </div>
             <!-- Column 3: Contact Info -->
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-4 text-center">
                 <h6 class="fw-bold mb-3 text-light">Contact Info</h6>
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2"><i class="bi bi-whatsapp me-2 text-success"></i>WhatsApp:
