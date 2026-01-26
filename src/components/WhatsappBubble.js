@@ -6,7 +6,7 @@ export function createWhatsappBubble() {
    style="position: fixed; bottom: 2rem; right: 2rem; z-index: 1050; background: white; border-radius: 50%;
    box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.15); width: 4rem; height: 4rem; display: flex; align-items: center;
    justify-content: center;" aria-label="Contact us on WhatsApp">
-    <img src="assets/WhatsApp_Logo_green.svg" alt="WhatsApp" width="40" height="40" style="display: block;"/>
+    <i class="bi bi-whatsapp" aria-hidden="true" style="color: #25D366; font-size: 2.5rem; line-height: 1;"></i>
 </a>
 `;
     return wrapper.firstElementChild;
