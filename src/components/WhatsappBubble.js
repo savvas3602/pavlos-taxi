@@ -9,7 +9,7 @@ export function createWhatsappBubble() {
                 box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.15);
             }
             50% {
-                transform: scale(1.05);
+                transform: scale(1.1);
                 box-shadow: 0 0.1875rem 0.75rem rgba(0,0,0,0.2);
             }
         }
