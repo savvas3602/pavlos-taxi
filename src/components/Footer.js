@@ -23,6 +23,7 @@ export function createFooter() {
                 <h6 class="fw-bold mb-3 text-light">Quick Links</h6>
                 <ul class="list-unstyled">
                     <li><a href="index.html" class="text-decoration-none text-light">Home</a></li>
+                    <li><a href="airport-tansfers.html" class="text-decoration-none text-light">Airport Transfers</a></li>
                     <li><a href="services.html" class="text-decoration-none text-light">Services</a></li>
                     <li><a href="fleet.html" class="text-decoration-none text-light">Fleet</a></li>
                     <li><a href="contact.html" class="text-decoration-none text-light">Contact</a></li>

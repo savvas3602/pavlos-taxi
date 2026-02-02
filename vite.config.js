@@ -10,7 +10,9 @@ export default defineConfig({
             input: {
                 main: 'index.html',
                 fleet: 'fleet.html',
-                contact: 'contact.html'
+                contact: 'contact.html',
+                services: 'services.html',
+                airport_transfers: 'airport-transfers.html'
             }
         }
     }

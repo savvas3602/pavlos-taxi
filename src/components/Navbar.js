@@ -21,7 +21,7 @@ export function createNavbar() {
                     <a class="nav-link" href="index.html">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="index.html">Airport Transfers</a>
+                    <a class="nav-link" href="airport-transfers.html">Airport Transfers</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="services.html">Services</a>
