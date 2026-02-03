@@ -2,6 +2,7 @@ import { createNavbar } from './components/Navbar.js';
 import { createFooter } from './components/Footer.js';
 import { createLanguageModal } from './components/LanguageModal.js';
 import { createWhatsappBubble } from './components/WhatsappBubble.js';
+import { initializeScrollAnimations } from "./utils/scroll-animation.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const navbarMount = document.getElementById('navbar');
@@ -27,4 +28,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (footerMount) {
         footerMount.replaceWith(createFooter());
     }
+    initializeScrollAnimations();
 });
