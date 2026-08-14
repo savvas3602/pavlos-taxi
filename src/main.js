@@ -1,3 +1,10 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
+import './styles/custom-cards.css';
+import './styles/scroll-animation.css';
+
 import { createNavbar } from './components/Navbar.js';
 import { createFooter } from './components/Footer.js';
 import { createLanguageModal } from './components/LanguageModal.js';
