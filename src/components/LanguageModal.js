@@ -12,8 +12,6 @@ export function createLanguageModal() {
             <div class="modal-body">
                 <ul class="list-group">
                     <li class="list-group-item list-group-item-action">English – EN</li>
-                    <li class="list-group-item list-group-item-action">Russian – RU</li>
-                    <li class="list-group-item list-group-item-action">Hebrew – HE</li>
                 </ul>
             </div>
         </div>
