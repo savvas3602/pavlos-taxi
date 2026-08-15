@@ -1,37 +1,28 @@
 export function initializeScrollAnimations() {
     const scrollElements = document.querySelectorAll(".scroll-animate");
+    if (!scrollElements.length) return;
 
-    const elementInView = (el, dividend = 1) => {
-        const elementTop = el.getBoundingClientRect().top;
+    const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-        return (
-            elementTop <=
-            (window.innerHeight || document.documentElement.clientHeight) / dividend
-        );
-    };
-
-    const displayScrollElement = (element) => {
-        element.classList.add("is-visible");
-    };
-
-    const hideScrollElement = (element) => {
-        element.classList.remove("is-visible");
-    };
-
-    const handleScrollAnimation = () => {
-        scrollElements.forEach((el) => {
-            if (elementInView(el, 1.25)) {
-                displayScrollElement(el);
-            } else {
-                hideScrollElement(el);
-            }
-        })
+    if (prefersReducedMotion) {
+        // Skip the animation machinery entirely; just show content.
+        scrollElements.forEach((el) => el.classList.add("is-visible"));
+        return;
     }
 
-    window.addEventListener("scroll", () => {
-        handleScrollAnimation();
-    });
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                entry.target.classList.toggle("is-visible", entry.isIntersecting);
+            });
+        },
+        {
+            threshold: 0,
+            rootMargin: "0px 0px -20% 0px", // reveal a bit before the element's bottom edge
+        }
+    );
 
-    // Initial check
-    handleScrollAnimation();
+    scrollElements.forEach((el) => observer.observe(el));
 }
