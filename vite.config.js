@@ -1,8 +1,10 @@
 // Vite config for GitHub Pages deployment
 import {defineConfig} from 'vite';
+import injectHTML from 'vite-plugin-html-inject';
 
 export default defineConfig({
     base: '/pavlos-taxi/',
+    plugins: [injectHTML()],
     build: {
         outDir: 'dist',
         emptyOutDir: true,
