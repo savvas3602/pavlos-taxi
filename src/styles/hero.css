@@ -15,3 +15,13 @@
 #hero-section {
     flex: 1;
 }
+
+/*
+ * Shared subject-header gradient for interior pages (Contact, Fleet,
+ * Airport Transfers, ...). Keeps the gradient + sizing in one place instead
+ * of duplicating the inline style on every page.
+ */
+.pav-hero-gradient {
+    min-height: 55vh;
+    background: linear-gradient(135deg, #585859 0%, #7dbef3 100%);
+}
