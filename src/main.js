@@ -4,6 +4,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import './styles/custom-cards.css';
 import './styles/scroll-animation.css';
+import './styles/hero.css';
 
 import { createNavbar } from './components/Navbar.js';
 import { createFooter } from './components/Footer.js';
@@ -16,12 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navbarMount) {
         const navbarElement = createNavbar();
         navbarMount.replaceWith(navbarElement);
-
-        const heroSection = document.getElementById('hero-section');
-        if (heroSection) {
-            const navbarHeight = navbarElement.offsetHeight;
-            heroSection.style.minHeight = `calc(100vh - ${navbarHeight}px)`;
-        }
     }
     const languageModalMount = document.getElementById('language-modal');
     if (languageModalMount) {
