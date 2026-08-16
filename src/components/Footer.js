@@ -1,4 +1,6 @@
 // Footer.js - Plain JS component for Vite
+import {WHATSAPP_URL, TEL_HREF, MAILTO_HREF, PHONE_DISPLAY, EMAIL} from '../config.js';
+
 export function createFooter() {
     const footer = document.createElement('footer');
     footer.className = 'bg-dark border-top text-light';
@@ -34,12 +36,12 @@ export function createFooter() {
                 <h6 class="fw-bold mb-3 text-light">Contact Info</h6>
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2"><i class="bi bi-whatsapp me-2 text-success"></i>WhatsApp:
-                        <a href="https://wa.me/35796699870" class="text-decoration-none text-light">+357 96 699 870</a>
+                        <a href="${WHATSAPP_URL}" class="text-decoration-none text-light">${PHONE_DISPLAY}</a>
                     </li>
                     <li class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i>Phone:
-                        <a href="tel:+35796699870" class="text-decoration-none text-light">+357 96 699 870</a></li>
+                        <a href="${TEL_HREF}" class="text-decoration-none text-light">${PHONE_DISPLAY}</a></li>
                     <li><i class="bi bi-envelope me-2 text-warning"></i>
-                        <a href="mailto:paul@airporttaxi.com" class="text-decoration-none text-light">paul@airporttaxi.com</a>
+                        <a href="${MAILTO_HREF}" class="text-decoration-none text-light">${EMAIL}</a>
                     </li>
                 </ul>
             </div>

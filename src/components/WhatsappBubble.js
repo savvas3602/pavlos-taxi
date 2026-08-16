@@ -1,4 +1,6 @@
 // WhatsappBubble.js - Plain JS component for Vite
+import {WHATSAPP_URL} from '../config.js';
+
 export function createWhatsappBubble() {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
@@ -25,7 +27,7 @@ export function createWhatsappBubble() {
             z-index: -1;
         }
     </style>
-    <a href="https://wa.me/35796699870" target="_blank" rel="noopener"
+    <a href="${WHATSAPP_URL}" target="_blank" rel="noopener"
        style="position: fixed; bottom: 2rem; right: 2rem; z-index: 1050;
        width: 4rem; height: 4rem; display: flex; align-items: center;
        justify-content: center;" aria-label="Contact us on WhatsApp">
