@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(npm install *)",
+      "Bash(npm audit *)",
+      "Bash(tee /tmp/build-before.log)",
+      "Bash(gzip -9 -c dist-before/assets/main-*.js)",
+      "Bash(tee /tmp/build-after.log)",
+      "Bash(gzip -9 -c dist/assets/main-*.js)",
+      "Bash(python3 -c ' *)",
+      "Bash(rm -rf dist dist-before /tmp/build-before.log /tmp/build-after.log && git status --short)",
+      "Bash(npm view *)",
+      "Bash(grep -v \"^--$\")",
+      "Bash(npm uninstall *)",
+      "Bash(git mv *)",
+      "Bash(echo \"VITE_TEST_TOKEN=hello-world-12345\")",
+      "Bash(cp .env.test-probe .env)",
+      "Bash(sed -i '3a <!-- PROBE: %VITE_TEST_TOKEN% -->' index.html)",
+      "Bash(rm -rf dist)",
+      "Bash(npm run *)",
+      "Bash(sed -i '/<!-- PROBE:/d' index.html)",
+      "Bash(rm -f .env .env.test-probe)",
+      "Bash(cd /home/savvas-adamou/github/pavlos-taxi *)",
+      "Bash(git rm *)",
+      "Bash(echo \"---exit: $?---\")",
+      "Bash(npx prettier *)",
+      "Bash(git status *)",
+      "Bash(python3 -)",
+      "Bash(rm -rf dist && git status --porcelain)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('hooks', {}\\), indent=2\\)\\)\")",
+      "Bash(identify dist/assets/taxi-logo.png)"
+    ],
+    "additionalDirectories": [
+      "/home/savvas-adamou/github/pavlos-taxi/dist",
+      "/tmp",
+      "/home/savvas-adamou/github/pavlos-taxi"
+    ]
+  }
+}

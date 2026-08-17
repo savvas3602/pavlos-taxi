@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+import './styles/theme.css';
 import './styles/custom-cards.css';
 import './styles/scroll-animation.css';
 import './styles/hero.css';

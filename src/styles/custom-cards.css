@@ -4,5 +4,19 @@
     transition: transform 0.5s cubic-bezier(.4,2,.6,1), border-color 0.5s;
 }
 .pav-feature-card:hover, .pav-feature-card:focus-within {
-    border-color: #ffc107 !important; /* Bootstrap warning color */
+    border-color: var(--bs-warning) !important; /* Bootstrap warning color */
+}
+
+/*
+ * Circular badge behind each "Our Services" panel icon. Panel backgrounds
+ * now vary per card, so the icon needs a background of its own — a dark
+ * circle keeps the yellow glyph legible no matter what color sits behind it
+ * (e.g. the near-identical yellow-on-yellow case) and echoes the same
+ * rounded-circle icon badge already used on the Fleet and Airport Transfers
+ * pages.
+ */
+.pav-service-icon {
+    width: 4.5rem;
+    height: 4.5rem;
+    font-size: 1.75rem;
 }

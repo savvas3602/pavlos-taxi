@@ -52,7 +52,7 @@ export function createNavbar() {
         .navbar-nav .nav-link:focus,
         .btn-link.language-icon:hover,
         .btn-link.language-icon:focus {
-            border-bottom: 0.2rem solid #ffc107 !important;
+            border-bottom: 0.2rem solid var(--bs-warning) !important;
         }
     </style>
     `;

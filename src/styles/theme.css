@@ -1,0 +1,29 @@
+/*
+ * Overrides Bootstrap's `info` theme color via its CSS custom properties.
+ * Cascades into every `-info` utility and component (bg-info, text-info,
+ * btn-info, border-info, badges, alerts, ...) without needing `!important`.
+ */
+:root {
+    --bs-info: #58c6ed;
+    --bs-info-rgb: 88, 198, 237;
+
+    --bs-warning: #f5ce3c;
+    --bs-warning-rgb: 245, 206, 60;
+}
+
+/*
+ * .btn-warning bakes its own --bs-btn-* colors at Bootstrap's build time
+ * (not derived from --bs-warning above), so it needs its own override here.
+ * Hover/active shades use the same tint percentages Bootstrap generates for
+ * its default warning button (15% / 20% / 10% tints toward white).
+ */
+.btn-warning {
+    --bs-btn-bg: #f5ce3c;
+    --bs-btn-border-color: #f5ce3c;
+    --bs-btn-hover-bg: #f6d559;
+    --bs-btn-hover-border-color: #f6d350;
+    --bs-btn-active-bg: #f7d863;
+    --bs-btn-active-border-color: #f6d350;
+    --bs-btn-disabled-bg: #f5ce3c;
+    --bs-btn-disabled-border-color: #f5ce3c;
+}
