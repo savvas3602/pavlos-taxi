@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Generated hero image variants (regenerated via the "prebuild"/"predev" script)
+src/assets/hero/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

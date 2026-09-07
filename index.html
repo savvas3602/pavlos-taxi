@@ -11,9 +11,44 @@
 <div class="pav-hero-viewport">
     <load src="partials/body-top.html" />
 
-    <!-- Hero Section -->
-    <div id="hero-section" class="container-fluid text-light d-flex align-items-center justify-content-center position-relative"
-        style="background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1)), url('/assets/profile_image_02.jpg') no-repeat center center; background-size: cover;">
+    <!-- Page Hero -->
+    <div id="hero-section" class="container-fluid text-light d-flex align-items-center justify-content-center position-relative overflow-hidden">
+        <picture>
+            <source
+                type="image/avif"
+                srcset="/src/assets/hero/profile-640.avif 640w,
+                        /src/assets/hero/profile-828.avif 828w,
+                        /src/assets/hero/profile-1080.avif 1080w,
+                        /src/assets/hero/profile-1440.avif 1440w,
+                        /src/assets/hero/profile-1920.avif 1920w,
+                        /src/assets/hero/profile-2560.avif 2560w"
+                sizes="100vw">
+            <source
+                type="image/webp"
+                srcset="/src/assets/hero/profile-640.webp 640w,
+                        /src/assets/hero/profile-828.webp 828w,
+                        /src/assets/hero/profile-1080.webp 1080w,
+                        /src/assets/hero/profile-1440.webp 1440w,
+                        /src/assets/hero/profile-1920.webp 1920w,
+                        /src/assets/hero/profile-2560.webp 2560w"
+                sizes="100vw">
+            <img
+                src="/src/assets/hero/profile-1080.jpg"
+                srcset="/src/assets/hero/profile-640.jpg 640w,
+                        /src/assets/hero/profile-828.jpg 828w,
+                        /src/assets/hero/profile-1080.jpg 1080w,
+                        /src/assets/hero/profile-1440.jpg 1440w,
+                        /src/assets/hero/profile-1920.jpg 1920w,
+                        /src/assets/hero/profile-2560.jpg 2560w"
+                sizes="100vw"
+                width="4501" height="4500"
+                alt="A yellow Mercedes taxi with Larnaca's airport tower, a plane and palm trees"
+                loading="eager" fetchpriority="high"
+                class="position-absolute top-0 start-0 w-100 h-100"
+                style="object-fit: cover;">
+        </picture>
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1));"></div>
+
         <div class="position-absolute top-0 start-0 p-4">
             <div class="d-flex flex-row align-items-center">
                 <span class="d-flex align-items-center me-4 bg-warning text-dark rounded-pill px-3 py-1">

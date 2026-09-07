@@ -2,10 +2,11 @@
 import {defineConfig} from 'vite';
 import injectHTML from 'vite-plugin-html-inject';
 import {PHONE_DISPLAY, WHATSAPP_URL, TEL_HREF, MAILTO_HREF} from './src/config.js';
+import {imagetools} from 'vite-imagetools'
 
 export default defineConfig({
     base: '/pavlos-taxi/',
-    plugins: [injectHTML()],
+    plugins: [injectHTML(), imagetools()],
     define: {
         // Config values that will substitute %VITE_*% placeholders
         'import.meta.env.VITE_PHONE_DISPLAY': JSON.stringify(PHONE_DISPLAY),

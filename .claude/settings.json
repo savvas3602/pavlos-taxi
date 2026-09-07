@@ -29,7 +29,9 @@
       "Bash(python3 -)",
       "Bash(rm -rf dist && git status --porcelain)",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('hooks', {}\\), indent=2\\)\\)\")",
-      "Bash(identify dist/assets/taxi-logo.png)"
+      "Bash(identify dist/assets/taxi-logo.png)",
+      "Bash(node -e ' *)",
+      "Bash(mkdir -p /home/savvas-adamou/github/pavlos-taxi/scripts)"
     ],
     "additionalDirectories": [
       "/home/savvas-adamou/github/pavlos-taxi/dist",
