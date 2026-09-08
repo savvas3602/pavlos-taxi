@@ -14,23 +14,19 @@ export const CURRENCY_SYMBOL = '€';
 
 export const DESTINATIONS = [
     { id: 'lca-city', description: 'LCA City' },
-    { id: 'lca-tourist-area', description: 'LCA Turist Area' },
+    { id: 'lca-tourist-area', description: 'LCA Tourist Area' },
     { id: 'ayia-napa', description: 'Ayia Nappa' },
     { id: 'protaras', description: 'Protaras' },
     { id: 'limassol-city', description: 'Limassol City' },
-    { id: 'limassol-tourist-area', description: 'Limassol Turist area' },
+    { id: 'limassol-tourist-area', description: 'Limassol Tourist area' },
     { id: 'paphos-city', description: 'Paphos City' },
     { id: 'paphos-airport', description: 'Paphos Airport' },
 ];
 
 // Vehicle capacity/pricing tiers used by the book-now quote calculator.
-// Note: the 6- and 8-seater tiers are the *same* physical vehicle (Mercedes
-// Vito), just priced differently based on how many of its seats are used -
-// they are pricing tiers, not distinct cars, hence the separate `vehicle`
-// (display name) vs `id` (pricing-lookup key) fields.
 export const VEHICLES = [
     { id: '4-seater', vehicle: 'Mercedes E-Class', capacity: 4 },
-    { id: '6-seater', vehicle: 'Mercedes Vito', capacity: 6 },
+    { id: '6-seater', vehicle: 'Mercedes V-Class', capacity: 6 },
     { id: '8-seater', vehicle: 'Mercedes Vito', capacity: 8 },
 ];
 
