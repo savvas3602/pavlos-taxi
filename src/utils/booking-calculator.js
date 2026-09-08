@@ -20,6 +20,12 @@ export function selectVehicle(totalPassengers) {
 /**
  * Calculates an indicative quote for the given selections.
  *
+ * `locationId` is the non-airport end of the trip - every supported route is
+ * Larnaca Airport <-> that location, and the fare is the same either
+ * direction, so which end is the pick-up vs. the destination doesn't affect
+ * price and isn't needed here (it's a presentational concern, handled in
+ * BookingCalculator.js for the on-screen summary and WhatsApp message).
+ *
  * `luggageSize` is accepted and passed through for the WhatsApp summary,
  * but does not yet affect vehicle choice or price - that pricing rule is
  * still TBD (see TODO.md), so it's a no-op here until it's defined.
@@ -27,10 +33,10 @@ export function selectVehicle(totalPassengers) {
  * Returns:
  *   - { totalPassengers: 0, vehicle: null, ... }              nothing selected yet
  *   - { vehicle: null, totalPassengers, overCapacity: true }  party too large for any vehicle
- *   - { vehicle, basePrice: null, ... }                       vehicle found but no price for that destination
+ *   - { vehicle, basePrice: null, ... }                       vehicle found but no price for that location
  *   - { vehicle, basePrice, addOns, addOnsTotal, total }      normal quote
  */
-export function calculateQuote({ destinationId, adults = 0, children = 0, addOnIds = [] } = {}) {
+export function calculateQuote({ locationId, adults = 0, children = 0, addOnIds = [] } = {}) {
     const totalPassengers = adults + children;
 
     if (totalPassengers === 0) {
@@ -44,7 +50,7 @@ export function calculateQuote({ destinationId, adults = 0, children = 0, addOnI
 
     const addOns = ADD_ONS.filter((addOn) => addOnIds.includes(addOn.id));
     const addOnsTotal = addOns.reduce((sum, addOn) => sum + addOn.price, 0);
-    const basePrice = PRICING[vehicle.id]?.[destinationId] ?? null;
+    const basePrice = PRICING[vehicle.id]?.[locationId] ?? null;
     const total = basePrice === null ? null : basePrice + addOnsTotal;
 
     return { totalPassengers, vehicle, overCapacity: false, basePrice, addOns, addOnsTotal, total };

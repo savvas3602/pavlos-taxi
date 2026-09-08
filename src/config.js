@@ -12,10 +12,16 @@ export const MAILTO_HREF = `mailto:${EMAIL}`;
 
 export const CURRENCY_SYMBOL = '€';
 
-export const DESTINATIONS = [
-    { id: 'lca-city', description: 'LCA City' },
-    { id: 'lca-tourist-area', description: 'LCA Tourist Area' },
-    { id: 'ayia-napa', description: 'Ayia Nappa' },
+// Every route the book-now quote calculator supports has Larnaca Airport as
+// one end - the other end is one of these. Which end is the pick-up vs. the
+// destination is a per-booking choice (see TRIP_DIRECTIONS in
+// BookingCalculator.js), not fixed per location.
+export const AIRPORT_LABEL = 'Larnaca Airport';
+
+export const LOCATIONS = [
+    { id: 'lca-city', description: 'Larnaca City' },
+    { id: 'lca-tourist-area', description: 'Larnaca Tourist Area' },
+    { id: 'ayia-napa', description: 'Ayia Napa' },
     { id: 'protaras', description: 'Protaras' },
     { id: 'limassol-city', description: 'Limassol City' },
     { id: 'limassol-tourist-area', description: 'Limassol Tourist area' },
@@ -30,7 +36,8 @@ export const VEHICLES = [
     { id: '8-seater', vehicle: 'Mercedes Vito', capacity: 8 },
 ];
 
-// Base fare per vehicle tier x destination, in EUR.
+// Base fare per vehicle tier x location, in EUR. Same fare either direction
+// (Larnaca Airport -> location or location -> Larnaca Airport).
 export const PRICING = {
     '4-seater': {
         'lca-city': 20,
