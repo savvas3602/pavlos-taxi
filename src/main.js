@@ -11,6 +11,7 @@ import { createNavbar } from './components/Navbar.js';
 import { createFooter } from './components/Footer.js';
 import { createLanguageModal } from './components/LanguageModal.js';
 import { createWhatsappBubble } from './components/WhatsappBubble.js';
+import { createBookingCalculator } from './components/BookingCalculator.js';
 import { initializeScrollAnimations } from "./utils/scroll-animation.js";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,6 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const whatsappBubbleMount = document.getElementById('whatsapp-bubble');
     if (whatsappBubbleMount) {
         whatsappBubbleMount.replaceWith(createWhatsappBubble());
+    }
+    const bookingCalculatorMount = document.getElementById('booking-calculator');
+    if (bookingCalculatorMount) {
+        bookingCalculatorMount.replaceWith(createBookingCalculator());
     }
     const footerMount = document.getElementById('footer');
     if (footerMount) {
