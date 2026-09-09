@@ -26,9 +26,9 @@ export function selectVehicle(totalPassengers) {
  * price and isn't needed here (it's a presentational concern, handled in
  * BookingCalculator.js for the on-screen summary and WhatsApp message).
  *
- * `luggageSize` is accepted and passed through for the WhatsApp summary,
- * but does not yet affect vehicle choice or price - that pricing rule is
- * still TBD (see TODO.md), so it's a no-op here until it's defined.
+ * Luggage counts (how many of each size) are collected on the form and sent
+ * in the WhatsApp summary, but aren't passed in here - they don't yet affect
+ * vehicle choice or price, that pricing rule is still TBD (see TODO.md).
  *
  * Returns:
  *   - { totalPassengers: 0, vehicle: null, ... }              nothing selected yet

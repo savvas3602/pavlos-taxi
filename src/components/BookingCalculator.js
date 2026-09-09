@@ -1,9 +1,10 @@
 // BookingCalculator.js - Plain JS component for Vite.
 // Renders the "Get an Instant Quote" form: trip direction, location, adults,
-// children, luggage size and add-ons drive an auto-selected vehicle +
-// indicative price (src/utils/booking-calculator.js), which the visitor
-// then sends to us as a prefilled WhatsApp message - same backend-free,
-// WhatsApp-to-human booking model the rest of the site already uses.
+// children, luggage (a count per size) and add-ons drive an auto-selected
+// vehicle + indicative price (src/utils/booking-calculator.js), which the
+// visitor then sends to us as a prefilled WhatsApp message - same
+// backend-free, WhatsApp-to-human booking model the rest of the site
+// already uses.
 import { LOCATIONS, ADD_ONS, CURRENCY_SYMBOL, WHATSAPP_URL, AIRPORT_LABEL } from '../config.js';
 import { calculateQuote, MAX_PASSENGERS } from '../utils/booking-calculator.js';
 
@@ -12,6 +13,7 @@ const LUGGAGE_SIZES = [
     { id: 'm', label: 'Medium' },
     { id: 'l', label: 'Large' },
 ];
+const MAX_LUGGAGE_PER_SIZE = 10;
 
 // Every route is Larnaca Airport <-> a location (see LOCATIONS in
 // config.js) - the customer picks which end the airport is. Pricing is the
@@ -30,8 +32,31 @@ function locationOptionsHtml() {
     return LOCATIONS.map((location) => optionHtml(location.id, location.description)).join('');
 }
 
-function luggageOptionsHtml() {
-    return LUGGAGE_SIZES.map((size) => optionHtml(size.id, size.label)).join('');
+function luggageCountFieldHtml(size) {
+    return `
+    <div class="col-4">
+        <label for="booking-luggage-${size.id}" class="form-label small mb-1">${size.label}</label>
+        <input type="number" id="booking-luggage-${size.id}" class="form-control booking-luggage-count"
+               data-size-id="${size.id}" min="0" max="${MAX_LUGGAGE_PER_SIZE}" value="0">
+    </div>
+    `;
+}
+
+function luggageCountFieldsHtml() {
+    return LUGGAGE_SIZES.map(luggageCountFieldHtml).join('');
+}
+
+// e.g. { s: 1, m: 2, l: 1 } -> "1 Small, 2 Medium, 1 Large"; sizes left at 0
+// are omitted. Used for both the on-screen hint and the WhatsApp message.
+function luggageSummary(luggageCounts) {
+    return LUGGAGE_SIZES
+        .filter((size) => luggageCounts[size.id] > 0)
+        .map((size) => `${luggageCounts[size.id]} ${size.label}`)
+        .join(', ');
+}
+
+function totalLuggageCount(luggageCounts) {
+    return LUGGAGE_SIZES.reduce((sum, size) => sum + (luggageCounts[size.id] || 0), 0);
 }
 
 function directionFieldHtml(direction) {
@@ -106,7 +131,7 @@ function buildWhatsappMessage(state, quote) {
     const [pickup, destination] = state.direction === 'from-airport'
         ? [AIRPORT_LABEL, locationLabel]
         : [locationLabel, AIRPORT_LABEL];
-    const luggage = LUGGAGE_SIZES.find((l) => l.id === state.luggageId);
+    const luggage = luggageSummary(state.luggageCounts);
     const pickupDateTime = formatPickupDateTime(state.pickupDateTime);
     const lines = [
         `Hi! I'd like a taxi quote:`,
@@ -118,7 +143,7 @@ function buildWhatsappMessage(state, quote) {
     }
     lines.push(
         `- Passengers: ${state.adults} adult(s), ${state.children} child(ren)`,
-        `- Luggage: ${luggage ? luggage.label : '—'}`,
+        `- Luggage: ${luggage || 'None'}`,
     );
     if (quote.addOns.length) {
         lines.push(`- Add-ons: ${quote.addOns.map((a) => a.label).join(', ')}`);
@@ -170,13 +195,14 @@ export function createBookingCalculator() {
                                     <label for="booking-children" class="form-label fw-semibold">Children</label>
                                     <input type="number" id="booking-children" class="form-control" min="0" max="${MAX_PASSENGERS}" value="0">
                                 </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="booking-luggage" class="form-label fw-semibold">Luggage size</label>
-                                    <select id="booking-luggage" class="form-select">
-                                        ${luggageOptionsHtml()}
-                                    </select>
+                                <div class="col-12">
+                                    <span class="form-label fw-semibold d-block">Luggage</span>
+                                    <div class="row g-2">
+                                        ${luggageCountFieldsHtml()}
+                                    </div>
+                                    <div id="booking-luggage-total" class="form-text"></div>
                                 </div>
-                                <div class="col-12 col-md-6">
+                                <div class="col-12">
                                     <span class="form-label fw-semibold d-block">Add-ons</span>
                                     <div class="d-flex flex-wrap gap-3">
                                         ${addOnFieldsHtml()}
@@ -207,20 +233,25 @@ export function createBookingCalculator() {
     const pickupTimeEl = section.querySelector('#booking-pickup-time');
     const adultsEl = section.querySelector('#booking-adults');
     const childrenEl = section.querySelector('#booking-children');
-    const luggageEl = section.querySelector('#booking-luggage');
+    const luggageCountEls = section.querySelectorAll('.booking-luggage-count');
+    const luggageTotalEl = section.querySelector('#booking-luggage-total');
     const addOnEls = section.querySelectorAll('.booking-addon');
     const resultEl = section.querySelector('#booking-result');
     const ctaEl = section.querySelector('#booking-cta');
 
     function readState() {
         const checkedDirection = Array.from(directionEls).find((el) => el.checked);
+        const luggageCounts = {};
+        luggageCountEls.forEach((el) => {
+            luggageCounts[el.dataset.sizeId] = Math.max(0, Number.parseInt(el.value, 10) || 0);
+        });
         return {
             direction: checkedDirection ? checkedDirection.value : DEFAULT_DIRECTION,
             locationId: locationEl.value,
             pickupDateTime: pickupTimeEl.value,
             adults: Math.max(0, Number.parseInt(adultsEl.value, 10) || 0),
             children: Math.max(0, Number.parseInt(childrenEl.value, 10) || 0),
-            luggageId: luggageEl.value,
+            luggageCounts,
             addOnIds: Array.from(addOnEls).filter((el) => el.checked).map((el) => el.value),
         };
     }
@@ -261,6 +292,11 @@ export function createBookingCalculator() {
         locationLabelEl.textContent = locationLabelText(state.direction);
         renderResult(state, quote);
 
+        const totalLuggage = totalLuggageCount(state.luggageCounts);
+        luggageTotalEl.textContent = totalLuggage > 0
+            ? `Total: ${totalLuggage} piece${totalLuggage === 1 ? '' : 's'} (${luggageSummary(state.luggageCounts)})`
+            : '';
+
         const canBook = Boolean(state.locationId) && Boolean(state.pickupDateTime) && quote.total !== null && !quote.overCapacity;
         ctaEl.classList.toggle('disabled', !canBook);
         ctaEl.setAttribute('aria-disabled', String(!canBook));
@@ -270,7 +306,7 @@ export function createBookingCalculator() {
             : WHATSAPP_URL;
     }
 
-    [locationEl, pickupTimeEl, adultsEl, childrenEl, luggageEl].forEach((el) => el.addEventListener('input', update));
+    [locationEl, pickupTimeEl, adultsEl, childrenEl, ...luggageCountEls].forEach((el) => el.addEventListener('input', update));
     addOnEls.forEach((el) => el.addEventListener('change', update));
     directionEls.forEach((el) => el.addEventListener('change', update));
 
