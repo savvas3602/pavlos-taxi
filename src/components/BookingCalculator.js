@@ -1,19 +1,22 @@
 // BookingCalculator.js - Plain JS component for Vite.
-// Renders the "Get an Instant Quote" form: trip direction, location, adults,
-// children, luggage (a count per size) and add-ons drive an auto-selected
-// vehicle + indicative price (src/utils/booking-calculator.js), which the
-// visitor then sends to us as a prefilled WhatsApp message - same
-// backend-free, WhatsApp-to-human booking model the rest of the site
-// already uses.
-import { LOCATIONS, ADD_ONS, CURRENCY_SYMBOL, WHATSAPP_URL, AIRPORT_LABEL } from '../config.js';
-import { calculateQuote, MAX_PASSENGERS } from '../utils/booking-calculator.js';
+// Renders the "Get an Instant Quote" form: trip direction, location, and
+// per-trip details (date/time, adults, children, luggage, add-ons) drive an
+// auto-selected vehicle + indicative price (src/utils/booking-calculator.js).
+// When the pick-up is the airport, the customer can also add a return leg
+// (its own date/time, passengers, luggage, add-ons) for a round trip at a
+// 10% discount on the combined fare. Either way, the visitor sends the
+// result to us as a prefilled WhatsApp message - same backend-free,
+// WhatsApp-to-human booking model the rest of the site already uses.
+import { LOCATIONS, ADD_ONS, CURRENCY_SYMBOL, WHATSAPP_URL, AIRPORT_LABEL, ROUND_TRIP_DISCOUNT } from '../config.js';
+import { calculateQuote, combineRoundTripQuote, MAX_PASSENGERS } from '../utils/booking-calculator.js';
 
 const LUGGAGE_SIZES = [
     { id: 's', label: 'Small' },
     { id: 'm', label: 'Medium' },
     { id: 'l', label: 'Large' },
 ];
-const MAX_LUGGAGE_PER_SIZE = 10;
+const MAX_LUGGAGE_PER_SIZE = 3;
+const ROUND_TRIP_DISCOUNT_PERCENT = Math.round(ROUND_TRIP_DISCOUNT * 100);
 
 // Every route is Larnaca Airport <-> a location (see LOCATIONS in
 // config.js) - the customer picks which end the airport is. Pricing is the
@@ -32,18 +35,19 @@ function locationOptionsHtml() {
     return LOCATIONS.map((location) => optionHtml(location.id, location.description)).join('');
 }
 
-function luggageCountFieldHtml(size) {
+function luggageCountFieldHtml(size, prefix) {
+    const id = `booking-${prefix}-luggage-${size.id}`;
     return `
     <div class="col-4">
-        <label for="booking-luggage-${size.id}" class="form-label small mb-1">${size.label}</label>
-        <input type="number" id="booking-luggage-${size.id}" class="form-control booking-luggage-count"
-               data-size-id="${size.id}" min="0" max="${MAX_LUGGAGE_PER_SIZE}" value="0">
+        <label for="${id}" class="form-label small mb-1">${size.label}</label>
+        <input type="number" id="${id}" class="form-control booking-luggage-count"
+               data-trip="${prefix}" data-size-id="${size.id}" min="0" max="${MAX_LUGGAGE_PER_SIZE}" value="0">
     </div>
     `;
 }
 
-function luggageCountFieldsHtml() {
-    return LUGGAGE_SIZES.map(luggageCountFieldHtml).join('');
+function luggageCountFieldsHtml(prefix) {
+    return LUGGAGE_SIZES.map((size) => luggageCountFieldHtml(size, prefix)).join('');
 }
 
 // e.g. { s: 1, m: 2, l: 1 } -> "1 Small, 2 Medium, 1 Large"; sizes left at 0
@@ -101,17 +105,18 @@ function formatPickupDateTime(value) {
     });
 }
 
-function addOnFieldHtml(addOn) {
+function addOnFieldHtml(addOn, prefix) {
+    const id = `booking-${prefix}-addon-${addOn.id}`;
     return `
     <div class="form-check">
-        <input class="form-check-input booking-addon" type="checkbox" id="booking-addon-${addOn.id}" value="${addOn.id}">
-        <label class="form-check-label" for="booking-addon-${addOn.id}">${addOn.label} (+${CURRENCY_SYMBOL}${addOn.price})</label>
+        <input class="form-check-input booking-addon" type="checkbox" id="${id}" data-trip="${prefix}" value="${addOn.id}">
+        <label class="form-check-label" for="${id}">${addOn.label} (+${CURRENCY_SYMBOL}${addOn.price})</label>
     </div>
     `;
 }
 
-function addOnFieldsHtml() {
-    return ADD_ONS.map(addOnFieldHtml).join('');
+function addOnFieldsHtml(prefix) {
+    return ADD_ONS.map((addOn) => addOnFieldHtml(addOn, prefix)).join('');
 }
 
 function addOnLineHtml(addOn) {
@@ -125,24 +130,51 @@ function addOnsListHtml(addOns) {
     return `<ul class="mb-2 ps-3">${addOns.map(addOnLineHtml).join('')}</ul>`;
 }
 
-function buildWhatsappMessage(state, quote) {
-    const location = LOCATIONS.find((l) => l.id === state.locationId);
-    const locationLabel = location ? location.description : '—';
-    const [pickup, destination] = state.direction === 'from-airport'
-        ? [AIRPORT_LABEL, locationLabel]
-        : [locationLabel, AIRPORT_LABEL];
-    const luggage = luggageSummary(state.luggageCounts);
-    const pickupDateTime = formatPickupDateTime(state.pickupDateTime);
-    const lines = [
-        `Hi! I'd like a taxi quote:`,
-        `- Pick-up: ${pickup}`,
-        `- Destination: ${destination}`,
-    ];
+// Pick-up date/time, adults, children, luggage and add-ons for one leg of
+// the trip - identical shape for the outbound leg and (when round trip is
+// on) the return leg, just with ids/data-trip scoped by `prefix`.
+function tripFieldsHtml(prefix) {
+    return `
+        <div class="col-12 col-md-6">
+            <label for="booking-${prefix}-pickup-time" class="form-label fw-semibold">Pick-up date &amp; time</label>
+            <input type="datetime-local" id="booking-${prefix}-pickup-time" class="form-control" min="${nowLocalDateTimeString()}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label for="booking-${prefix}-adults" class="form-label fw-semibold">Adults</label>
+            <input type="number" id="booking-${prefix}-adults" class="form-control" min="0" max="${MAX_PASSENGERS}" value="1">
+        </div>
+        <div class="col-6 col-md-3">
+            <label for="booking-${prefix}-children" class="form-label fw-semibold">Children</label>
+            <input type="number" id="booking-${prefix}-children" class="form-control" min="0" max="${MAX_PASSENGERS}" value="0">
+        </div>
+        <div class="col-12">
+            <span class="form-label fw-semibold d-block">Luggage</span>
+            <div class="row g-2">
+                ${luggageCountFieldsHtml(prefix)}
+            </div>
+            <div id="booking-${prefix}-luggage-total" class="form-text"></div>
+        </div>
+        <div class="col-12">
+            <span class="form-label fw-semibold d-block">Add-ons</span>
+            <div class="d-flex flex-wrap gap-3">
+                ${addOnFieldsHtml(prefix)}
+            </div>
+        </div>
+    `;
+}
+
+// Pick-up/destination + trip details for one leg, without the fare line
+// (callers append "Fare:"/"Indicative total:" themselves - the two message
+// builders below word that line differently).
+function legDetailLines(pickup, destination, legState, quote) {
+    const luggage = luggageSummary(legState.luggageCounts);
+    const pickupDateTime = formatPickupDateTime(legState.pickupDateTime);
+    const lines = [`- Pick-up: ${pickup}`, `- Destination: ${destination}`];
     if (pickupDateTime) {
         lines.push(`- Pick-up date & time: ${pickupDateTime}`);
     }
     lines.push(
-        `- Passengers: ${state.adults} adult(s), ${state.children} child(ren)`,
+        `- Passengers: ${legState.adults} adult(s), ${legState.children} child(ren)`,
         `- Luggage: ${luggage || 'None'}`,
     );
     if (quote.addOns.length) {
@@ -151,8 +183,50 @@ function buildWhatsappMessage(state, quote) {
     if (quote.vehicle) {
         lines.push(`- Vehicle: ${quote.vehicle.vehicle} (up to ${quote.vehicle.capacity} passengers)`);
     }
+    return lines;
+}
+
+function buildOneWayMessage(state, quote) {
+    const location = LOCATIONS.find((l) => l.id === state.locationId);
+    const locationLabel = location ? location.description : '—';
+    const [pickup, destination] = state.direction === 'from-airport'
+        ? [AIRPORT_LABEL, locationLabel]
+        : [locationLabel, AIRPORT_LABEL];
+
+    const lines = [
+        `Hi! I'd like a taxi quote:`,
+        ...legDetailLines(pickup, destination, state.outbound, quote),
+    ];
     if (quote.total !== null) {
         lines.push(`- Indicative total: ${CURRENCY_SYMBOL}${quote.total}`);
+    }
+    lines.push('', 'Please confirm availability.');
+    return lines.join('\n');
+}
+
+function buildRoundTripMessage(state, outboundQuote, returnQuote, combined) {
+    const location = LOCATIONS.find((l) => l.id === state.locationId);
+    const locationLabel = location ? location.description : '—';
+
+    const lines = [
+        `Hi! I'd like a round-trip taxi quote:`,
+        '',
+        `Trip 1 - Outbound:`,
+        ...legDetailLines(AIRPORT_LABEL, locationLabel, state.outbound, outboundQuote),
+        outboundQuote.total !== null ? `- Fare: ${CURRENCY_SYMBOL}${outboundQuote.total}` : null,
+        '',
+        `Trip 2 - Return:`,
+        ...legDetailLines(locationLabel, AIRPORT_LABEL, state.returnTrip, returnQuote),
+        returnQuote.total !== null ? `- Fare: ${CURRENCY_SYMBOL}${returnQuote.total}` : null,
+        '',
+    ].filter((line) => line !== null);
+
+    if (combined.total !== null) {
+        lines.push(
+            `- Subtotal: ${CURRENCY_SYMBOL}${combined.subtotal}`,
+            `- Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${CURRENCY_SYMBOL}${combined.discount}`,
+            `- Indicative total: ${CURRENCY_SYMBOL}${combined.total}`,
+        );
     }
     lines.push('', 'Please confirm availability.');
     return lines.join('\n');
@@ -176,6 +250,15 @@ export function createBookingCalculator() {
                                         ${directionFieldsHtml()}
                                     </div>
                                 </div>
+                                <div class="col-12" id="booking-round-trip-field" hidden>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="booking-round-trip">
+                                        <label class="form-check-label fw-semibold" for="booking-round-trip">
+                                            Book a round trip <span class="badge text-bg-success">-${ROUND_TRIP_DISCOUNT_PERCENT}%</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Add a return journey back to ${AIRPORT_LABEL} and save ${ROUND_TRIP_DISCOUNT_PERCENT}% on the combined fare.</div>
+                                </div>
                                 <div class="col-12 col-md-6">
                                     <label for="booking-location" id="booking-location-label" class="form-label fw-semibold">${locationLabelText(DEFAULT_DIRECTION)}</label>
                                     <select id="booking-location" class="form-select">
@@ -183,29 +266,15 @@ export function createBookingCalculator() {
                                         ${locationOptionsHtml()}
                                     </select>
                                 </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="booking-pickup-time" class="form-label fw-semibold">Pick-up date &amp; time</label>
-                                    <input type="datetime-local" id="booking-pickup-time" class="form-control" min="${nowLocalDateTimeString()}">
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <label for="booking-adults" class="form-label fw-semibold">Adults</label>
-                                    <input type="number" id="booking-adults" class="form-control" min="0" max="${MAX_PASSENGERS}" value="1">
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <label for="booking-children" class="form-label fw-semibold">Children</label>
-                                    <input type="number" id="booking-children" class="form-control" min="0" max="${MAX_PASSENGERS}" value="0">
-                                </div>
-                                <div class="col-12">
-                                    <span class="form-label fw-semibold d-block">Luggage</span>
-                                    <div class="row g-2">
-                                        ${luggageCountFieldsHtml()}
-                                    </div>
-                                    <div id="booking-luggage-total" class="form-text"></div>
-                                </div>
-                                <div class="col-12">
-                                    <span class="form-label fw-semibold d-block">Add-ons</span>
-                                    <div class="d-flex flex-wrap gap-3">
-                                        ${addOnFieldsHtml()}
+
+                                <div id="booking-outbound-heading" class="col-12 fw-semibold text-secondary text-uppercase small mt-2" hidden>Trip 1 — Outbound</div>
+                                ${tripFieldsHtml('outbound')}
+
+                                <div id="booking-return-section" class="col-12" hidden>
+                                    <hr class="my-1">
+                                    <div class="fw-semibold text-secondary text-uppercase small mb-1">Trip 2 — Return</div>
+                                    <div class="row g-3">
+                                        ${tripFieldsHtml('return')}
                                     </div>
                                 </div>
                             </form>
@@ -228,31 +297,59 @@ export function createBookingCalculator() {
 
     const section = wrapper.firstElementChild;
     const directionEls = section.querySelectorAll('.booking-direction');
+    const roundTripFieldEl = section.querySelector('#booking-round-trip-field');
+    const roundTripEl = section.querySelector('#booking-round-trip');
     const locationLabelEl = section.querySelector('#booking-location-label');
     const locationEl = section.querySelector('#booking-location');
-    const pickupTimeEl = section.querySelector('#booking-pickup-time');
-    const adultsEl = section.querySelector('#booking-adults');
-    const childrenEl = section.querySelector('#booking-children');
-    const luggageCountEls = section.querySelectorAll('.booking-luggage-count');
-    const luggageTotalEl = section.querySelector('#booking-luggage-total');
-    const addOnEls = section.querySelectorAll('.booking-addon');
+    const outboundHeadingEl = section.querySelector('#booking-outbound-heading');
+    const returnSectionEl = section.querySelector('#booking-return-section');
     const resultEl = section.querySelector('#booking-result');
     const ctaEl = section.querySelector('#booking-cta');
 
-    function readState() {
-        const checkedDirection = Array.from(directionEls).find((el) => el.checked);
+    function legEls(prefix) {
+        return {
+            pickupTimeEl: section.querySelector(`#booking-${prefix}-pickup-time`),
+            adultsEl: section.querySelector(`#booking-${prefix}-adults`),
+            childrenEl: section.querySelector(`#booking-${prefix}-children`),
+            luggageCountEls: section.querySelectorAll(`.booking-luggage-count[data-trip="${prefix}"]`),
+            luggageTotalEl: section.querySelector(`#booking-${prefix}-luggage-total`),
+            addOnEls: section.querySelectorAll(`.booking-addon[data-trip="${prefix}"]`),
+        };
+    }
+    const outboundEls = legEls('outbound');
+    const returnEls = legEls('return');
+
+    function readLegState(els, locationId) {
         const luggageCounts = {};
-        luggageCountEls.forEach((el) => {
+        els.luggageCountEls.forEach((el) => {
             luggageCounts[el.dataset.sizeId] = Math.max(0, Number.parseInt(el.value, 10) || 0);
         });
         return {
-            direction: checkedDirection ? checkedDirection.value : DEFAULT_DIRECTION,
-            locationId: locationEl.value,
-            pickupDateTime: pickupTimeEl.value,
-            adults: Math.max(0, Number.parseInt(adultsEl.value, 10) || 0),
-            children: Math.max(0, Number.parseInt(childrenEl.value, 10) || 0),
+            locationId,
+            pickupDateTime: els.pickupTimeEl.value,
+            adults: Math.max(0, Number.parseInt(els.adultsEl.value, 10) || 0),
+            children: Math.max(0, Number.parseInt(els.childrenEl.value, 10) || 0),
             luggageCounts,
-            addOnIds: Array.from(addOnEls).filter((el) => el.checked).map((el) => el.value),
+            addOnIds: Array.from(els.addOnEls).filter((el) => el.checked).map((el) => el.value),
+        };
+    }
+
+    function updateLuggageHint(els, luggageCounts) {
+        const total = totalLuggageCount(luggageCounts);
+        els.luggageTotalEl.textContent = total > 0
+            ? `Total: ${total} piece${total === 1 ? '' : 's'} (${luggageSummary(luggageCounts)})`
+            : '';
+    }
+
+    function readState() {
+        const checkedDirection = Array.from(directionEls).find((el) => el.checked);
+        const direction = checkedDirection ? checkedDirection.value : DEFAULT_DIRECTION;
+        const locationId = locationEl.value;
+        return {
+            direction,
+            locationId,
+            outbound: readLegState(outboundEls, locationId),
+            returnTrip: readLegState(returnEls, locationId),
         };
     }
 
@@ -286,29 +383,98 @@ export function createBookingCalculator() {
         `;
     }
 
+    function renderRoundTripResult(state, outboundQuote, returnQuote, combined) {
+        if (outboundQuote.totalPassengers === 0 || returnQuote.totalPassengers === 0) {
+            resultEl.innerHTML = `<p class="mb-0 text-secondary">Add at least one passenger to both trips to see your vehicles and indicative price.</p>`;
+            return;
+        }
+
+        if (outboundQuote.overCapacity || returnQuote.overCapacity) {
+            const legLabel = outboundQuote.overCapacity ? 'Trip 1 (outbound)' : 'Trip 2 (return)';
+            const count = outboundQuote.overCapacity ? outboundQuote.totalPassengers : returnQuote.totalPassengers;
+            resultEl.innerHTML = `<p class="mb-0">${legLabel}: groups of ${count} need more than one vehicle — message us on WhatsApp for a custom quote.</p>`;
+            return;
+        }
+
+        if (!state.locationId || outboundQuote.basePrice === null || returnQuote.basePrice === null) {
+            resultEl.innerHTML = `
+                <p class="mb-1"><strong>Trip 1:</strong> ${outboundQuote.vehicle.vehicle} (up to ${outboundQuote.vehicle.capacity} passengers)</p>
+                <p class="mb-1"><strong>Trip 2:</strong> ${returnQuote.vehicle.vehicle} (up to ${returnQuote.vehicle.capacity} passengers)</p>
+                <p class="mb-0 text-secondary">Choose a location to see the indicative price.</p>
+            `;
+            return;
+        }
+
+        resultEl.innerHTML = `
+            <p class="mb-1"><strong>Trip 1 — Outbound</strong> (${outboundQuote.vehicle.vehicle})</p>
+            <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${outboundQuote.basePrice}</p>
+            ${addOnsListHtml(outboundQuote.addOns)}
+            <p class="mb-2 fw-semibold">Trip 1 total: ${CURRENCY_SYMBOL}${outboundQuote.total}</p>
+            <p class="mb-1"><strong>Trip 2 — Return</strong> (${returnQuote.vehicle.vehicle})</p>
+            <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${returnQuote.basePrice}</p>
+            ${addOnsListHtml(returnQuote.addOns)}
+            <p class="mb-2 fw-semibold">Trip 2 total: ${CURRENCY_SYMBOL}${returnQuote.total}</p>
+            <hr class="my-2">
+            <p class="mb-1">Subtotal: ${CURRENCY_SYMBOL}${combined.subtotal}</p>
+            <p class="mb-1">Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${CURRENCY_SYMBOL}${combined.discount}</p>
+            <p class="fs-4 fw-bold mb-1">Total: ${CURRENCY_SYMBOL}${combined.total}</p>
+            <p class="mb-0 text-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
+        `;
+    }
+
     function update() {
         const state = readState();
-        const quote = calculateQuote(state);
         locationLabelEl.textContent = locationLabelText(state.direction);
-        renderResult(state, quote);
 
-        const totalLuggage = totalLuggageCount(state.luggageCounts);
-        luggageTotalEl.textContent = totalLuggage > 0
-            ? `Total: ${totalLuggage} piece${totalLuggage === 1 ? '' : 's'} (${luggageSummary(state.luggageCounts)})`
-            : '';
+        const roundTripAvailable = state.direction === 'from-airport';
+        roundTripFieldEl.hidden = !roundTripAvailable;
+        if (!roundTripAvailable) {
+            roundTripEl.checked = false;
+        }
+        const roundTrip = roundTripAvailable && roundTripEl.checked;
+        outboundHeadingEl.hidden = !roundTrip;
+        returnSectionEl.hidden = !roundTrip;
 
-        const canBook = Boolean(state.locationId) && Boolean(state.pickupDateTime) && quote.total !== null && !quote.overCapacity;
+        updateLuggageHint(outboundEls, state.outbound.luggageCounts);
+        updateLuggageHint(returnEls, state.returnTrip.luggageCounts);
+
+        const outboundQuote = calculateQuote(state.outbound);
+        let canBook;
+        let message;
+
+        if (roundTrip) {
+            const returnQuote = calculateQuote(state.returnTrip);
+            const combined = combineRoundTripQuote(outboundQuote, returnQuote);
+            renderRoundTripResult(state, outboundQuote, returnQuote, combined);
+            canBook = Boolean(state.locationId)
+                && Boolean(state.outbound.pickupDateTime)
+                && Boolean(state.returnTrip.pickupDateTime)
+                && combined.total !== null
+                && !outboundQuote.overCapacity
+                && !returnQuote.overCapacity;
+            message = canBook ? buildRoundTripMessage(state, outboundQuote, returnQuote, combined) : null;
+        } else {
+            renderResult(state, outboundQuote);
+            canBook = Boolean(state.locationId) && Boolean(state.outbound.pickupDateTime)
+                && outboundQuote.total !== null && !outboundQuote.overCapacity;
+            message = canBook ? buildOneWayMessage(state, outboundQuote) : null;
+        }
+
         ctaEl.classList.toggle('disabled', !canBook);
         ctaEl.setAttribute('aria-disabled', String(!canBook));
         ctaEl.tabIndex = canBook ? 0 : -1;
-        ctaEl.href = canBook
-            ? `${WHATSAPP_URL}?text=${encodeURIComponent(buildWhatsappMessage(state, quote))}`
-            : WHATSAPP_URL;
+        ctaEl.href = canBook ? `${WHATSAPP_URL}?text=${encodeURIComponent(message)}` : WHATSAPP_URL;
     }
 
-    [locationEl, pickupTimeEl, adultsEl, childrenEl, ...luggageCountEls].forEach((el) => el.addEventListener('input', update));
-    addOnEls.forEach((el) => el.addEventListener('change', update));
-    directionEls.forEach((el) => el.addEventListener('change', update));
+    const inputEls = [
+        locationEl,
+        outboundEls.pickupTimeEl, outboundEls.adultsEl, outboundEls.childrenEl, ...outboundEls.luggageCountEls,
+        returnEls.pickupTimeEl, returnEls.adultsEl, returnEls.childrenEl, ...returnEls.luggageCountEls,
+    ];
+    inputEls.forEach((el) => el.addEventListener('input', update));
+
+    const changeEls = [...directionEls, roundTripEl, ...outboundEls.addOnEls, ...returnEls.addOnEls];
+    changeEls.forEach((el) => el.addEventListener('change', update));
 
     update();
 

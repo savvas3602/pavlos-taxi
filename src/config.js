@@ -78,3 +78,9 @@ export const ADD_ONS = [
     { id: 'booster-seat', label: 'Booster Seat', price: 5 },
     { id: 'pet', label: 'Pet', price: 5 },
 ];
+
+// Round trip = an outbound leg (Larnaca Airport -> location) plus a return
+// leg (location -> Larnaca Airport) booked together, only offered when the
+// airport is the pick-up (see BookingCalculator.js). This discount applies
+// to the combined fare of both legs, not to each leg individually.
+export const ROUND_TRIP_DISCOUNT = 0.10;

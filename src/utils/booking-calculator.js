@@ -1,7 +1,7 @@
 // booking-calculator.js - pure vehicle-selection/pricing logic for the
 // book-now quote form. No DOM access here on purpose, so the rules can be
 // reasoned about (and tested) independently of the UI that renders them.
-import { VEHICLES, PRICING, ADD_ONS } from '../config.js';
+import { VEHICLES, PRICING, ADD_ONS, ROUND_TRIP_DISCOUNT } from '../config.js';
 
 export const MAX_PASSENGERS = Math.max(...VEHICLES.map((v) => v.capacity));
 
@@ -54,4 +54,29 @@ export function calculateQuote({ locationId, adults = 0, children = 0, addOnIds 
     const total = basePrice === null ? null : basePrice + addOnsTotal;
 
     return { totalPassengers, vehicle, overCapacity: false, basePrice, addOns, addOnsTotal, total };
+}
+
+/**
+ * Combines two independently-priced one-way quotes (see calculateQuote)
+ * into a round-trip quote: ROUND_TRIP_DISCOUNT applies once, to the
+ * combined fare - not to each leg separately. The two legs don't need to
+ * match (different passenger counts, luggage, add-ons, even vehicle tiers
+ * are all fine); this just adds their totals and discounts the sum.
+ *
+ * subtotal/discount/total are all null unless both legs have a price.
+ */
+export function combineRoundTripQuote(outboundQuote, returnQuote) {
+    if (outboundQuote.total === null || returnQuote.total === null) {
+        return { subtotal: null, discount: null, total: null };
+    }
+
+    const subtotal = outboundQuote.total + returnQuote.total;
+    const discount = roundToCents(subtotal * ROUND_TRIP_DISCOUNT);
+    const total = roundToCents(subtotal - discount);
+
+    return { subtotal, discount, total };
+}
+
+function roundToCents(value) {
+    return Math.round(value * 100) / 100;
 }
