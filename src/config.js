@@ -14,8 +14,8 @@ export const CURRENCY_SYMBOL = '€';
 
 // Every route the book-now quote calculator supports has Larnaca Airport as
 // one end - the other end is one of these. Which end is the pick-up vs. the
-// destination is a per-booking choice (see TRIP_DIRECTIONS in
-// BookingCalculator.js), not fixed per location.
+// destination is a per-booking choice (see the swap button / DIRECTION_*
+// constants in BookingCalculator.js), not fixed per location.
 export const AIRPORT_LABEL = 'Larnaca Airport';
 
 export const LOCATIONS = [

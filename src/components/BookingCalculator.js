@@ -19,13 +19,12 @@ const MAX_LUGGAGE_PER_SIZE = 3;
 const ROUND_TRIP_DISCOUNT_PERCENT = Math.round(ROUND_TRIP_DISCOUNT * 100);
 
 // Every route is Larnaca Airport <-> a location (see LOCATIONS in
-// config.js) - the customer picks which end the airport is. Pricing is the
+// config.js) - the customer picks which end the airport is via the
+// pick-up/destination swap button (see layoutRoute() below). Pricing is the
 // same either way, so this only affects labels/wording, not the quote.
-const TRIP_DIRECTIONS = [
-    { id: 'from-airport', label: `Pick-up at ${AIRPORT_LABEL}` },
-    { id: 'to-airport', label: `Drop-off at ${AIRPORT_LABEL}` },
-];
-const DEFAULT_DIRECTION = 'to-airport';
+const DIRECTION_AIRPORT_PICKUP = 'from-airport';
+const DIRECTION_AIRPORT_DESTINATION = 'to-airport';
+const DEFAULT_DIRECTION = DIRECTION_AIRPORT_DESTINATION;
 
 function optionHtml(value, label) {
     return `<option value="${value}">${label}</option>`;
@@ -63,24 +62,38 @@ function totalLuggageCount(luggageCounts) {
     return LUGGAGE_SIZES.reduce((sum, size) => sum + (luggageCounts[size.id] || 0), 0);
 }
 
-function directionFieldHtml(direction) {
-    const checked = direction.id === DEFAULT_DIRECTION ? 'checked' : '';
-    return `
-    <div class="form-check form-check-inline">
-        <input class="form-check-input booking-direction" type="radio" name="booking-direction" id="booking-direction-${direction.id}" value="${direction.id}" ${checked}>
-        <label class="form-check-label" for="booking-direction-${direction.id}">${direction.label}</label>
-    </div>
-    `;
+function updateLuggageHint(els, luggageCounts) {
+    const total = totalLuggageCount(luggageCounts);
+    if (total === 0) {
+        els.luggageTotalEl.textContent = '';
+        return;
+    }
+    const unit = total === 1 ? 'piece' : 'pieces';
+    els.luggageTotalEl.textContent = `Total: ${total} ${unit} (${luggageSummary(luggageCounts)})`;
 }
 
-function directionFieldsHtml() {
-    return TRIP_DIRECTIONS.map(directionFieldHtml).join('');
+// Reads one leg's fields (outbound or return - see legEls()) into the plain
+// state shape calculateQuote()/the message builders expect.
+function readLegState(els, locationId) {
+    const luggageCounts = {};
+    els.luggageCountEls.forEach((el) => {
+        luggageCounts[el.dataset.sizeId] = Math.max(0, Number.parseInt(el.value, 10) || 0);
+    });
+    return {
+        locationId,
+        pickupDateTime: els.pickupTimeEl.value,
+        adults: Math.max(0, Number.parseInt(els.adultsEl.value, 10) || 0),
+        children: Math.max(0, Number.parseInt(els.childrenEl.value, 10) || 0),
+        luggageCounts,
+        addOnIds: Array.from(els.addOnEls).filter((el) => el.checked).map((el) => el.value),
+    };
 }
 
-// The location dropdown plays the pick-up role when the airport is the
-// destination, and vice versa - relabel it so the form reads correctly.
-function locationLabelText(direction) {
-    return direction === 'from-airport' ? 'Destination' : 'Pick-up location';
+// The location dropdown always sits in the "Pick-up" or "Destination" slot
+// opposite the airport (see layoutRoute()) - this only names its role for
+// the "choose a ___" hint before a location is picked.
+function locationRoleLabel(direction) {
+    return direction === DIRECTION_AIRPORT_PICKUP ? 'destination' : 'pick-up location';
 }
 
 // "YYYY-MM-DDTHH:mm" in the visitor's local time, for the <input
@@ -189,7 +202,7 @@ function legDetailLines(pickup, destination, legState, quote) {
 function buildOneWayMessage(state, quote) {
     const location = LOCATIONS.find((l) => l.id === state.locationId);
     const locationLabel = location ? location.description : '—';
-    const [pickup, destination] = state.direction === 'from-airport'
+    const [pickup, destination] = state.direction === DIRECTION_AIRPORT_PICKUP
         ? [AIRPORT_LABEL, locationLabel]
         : [locationLabel, AIRPORT_LABEL];
 
@@ -245,10 +258,28 @@ export function createBookingCalculator() {
                             <p class="fs-5 text-center mb-4">Tell us your trip details and we'll pick the right vehicle and an indicative price.</p>
                             <form id="booking-form" class="row g-3" novalidate>
                                 <div class="col-12">
-                                    <span class="form-label fw-semibold d-block">Trip type</span>
-                                    <div class="d-flex flex-wrap gap-3">
-                                        ${directionFieldsHtml()}
+                                    <div class="d-flex flex-column flex-md-row gap-4 gap-md-2 align-items-md-center position-relative">
+                                        <div id="booking-pickup-slot" class="form-floating w-100 flex-md-fill">
+                                            <select id="booking-location" class="form-select">
+                                                <option value="" selected>Choose a location</option>
+                                                ${locationOptionsHtml()}
+                                            </select>
+                                            <label id="booking-pickup-label" for="booking-location">Pick-up</label>
+                                        </div>
+                                        <div class="d-flex justify-content-center pav-swap-col">
+                                            <button type="button" id="booking-swap-direction" class="btn btn-light shadow-sm" aria-label="Swap pick-up and destination">
+                                                <i class="bi bi-arrow-left-right d-none d-md-inline" aria-hidden="true"></i>
+                                                <i class="bi bi-arrow-down-up d-inline d-md-none" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                        <div id="booking-destination-slot" class="form-floating w-100 flex-md-fill">
+                                            <select id="booking-airport" class="form-select" disabled>
+                                                <option>${AIRPORT_LABEL}</option>
+                                            </select>
+                                            <label id="booking-destination-label" for="booking-airport">Destination</label>
+                                        </div>
                                     </div>
+                                    <div id="booking-swap-announcement" class="visually-hidden" aria-live="polite"></div>
                                 </div>
                                 <div class="col-12" id="booking-round-trip-field" hidden>
                                     <div class="form-check">
@@ -259,14 +290,6 @@ export function createBookingCalculator() {
                                     </div>
                                     <div class="form-text">Add a return journey back to ${AIRPORT_LABEL} and save ${ROUND_TRIP_DISCOUNT_PERCENT}% on the combined fare.</div>
                                 </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="booking-location" id="booking-location-label" class="form-label fw-semibold">${locationLabelText(DEFAULT_DIRECTION)}</label>
-                                    <select id="booking-location" class="form-select">
-                                        <option value="" selected>Choose a location</option>
-                                        ${locationOptionsHtml()}
-                                    </select>
-                                </div>
-
                                 <div id="booking-outbound-heading" class="col-12 fw-semibold text-secondary text-uppercase small mt-2" hidden>Trip 1 — Outbound</div>
                                 ${tripFieldsHtml('outbound')}
 
@@ -296,15 +319,40 @@ export function createBookingCalculator() {
     `;
 
     const section = wrapper.firstElementChild;
-    const directionEls = section.querySelectorAll('.booking-direction');
     const roundTripFieldEl = section.querySelector('#booking-round-trip-field');
     const roundTripEl = section.querySelector('#booking-round-trip');
-    const locationLabelEl = section.querySelector('#booking-location-label');
+    const pickupSlotEl = section.querySelector('#booking-pickup-slot');
+    const destinationSlotEl = section.querySelector('#booking-destination-slot');
+    const pickupLabelEl = section.querySelector('#booking-pickup-label');
+    const destinationLabelEl = section.querySelector('#booking-destination-label');
+    const swapDirectionEl = section.querySelector('#booking-swap-direction');
+    const swapAnnouncementEl = section.querySelector('#booking-swap-announcement');
+    const airportEl = section.querySelector('#booking-airport');
     const locationEl = section.querySelector('#booking-location');
     const outboundHeadingEl = section.querySelector('#booking-outbound-heading');
     const returnSectionEl = section.querySelector('#booking-return-section');
     const resultEl = section.querySelector('#booking-result');
     const ctaEl = section.querySelector('#booking-cta');
+
+    let direction = DEFAULT_DIRECTION;
+
+    // Relocates the fixed airport select and the real location select
+    // between the pick-up/destination slots to match `direction`, and keeps
+    // each slot's label pointing at whichever select currently sits there.
+    // The slots' own labels ("Pick-up"/"Destination") never change - only
+    // which select fills them does.
+    function layoutRoute() {
+        const airportIsPickup = direction === DIRECTION_AIRPORT_PICKUP;
+        const pickupSelectEl = airportIsPickup ? airportEl : locationEl;
+        const destinationSelectEl = airportIsPickup ? locationEl : airportEl;
+        // .append() (not .appendChild()) so the select always ends up
+        // before its label, in one call - .form-floating's CSS targets
+        // "select ~ label", so that order must hold after every swap.
+        pickupSlotEl.append(pickupSelectEl, pickupLabelEl);
+        destinationSlotEl.append(destinationSelectEl, destinationLabelEl);
+        pickupLabelEl.setAttribute('for', pickupSelectEl.id);
+        destinationLabelEl.setAttribute('for', destinationSelectEl.id);
+    }
 
     function legEls(prefix) {
         return {
@@ -319,31 +367,7 @@ export function createBookingCalculator() {
     const outboundEls = legEls('outbound');
     const returnEls = legEls('return');
 
-    function readLegState(els, locationId) {
-        const luggageCounts = {};
-        els.luggageCountEls.forEach((el) => {
-            luggageCounts[el.dataset.sizeId] = Math.max(0, Number.parseInt(el.value, 10) || 0);
-        });
-        return {
-            locationId,
-            pickupDateTime: els.pickupTimeEl.value,
-            adults: Math.max(0, Number.parseInt(els.adultsEl.value, 10) || 0),
-            children: Math.max(0, Number.parseInt(els.childrenEl.value, 10) || 0),
-            luggageCounts,
-            addOnIds: Array.from(els.addOnEls).filter((el) => el.checked).map((el) => el.value),
-        };
-    }
-
-    function updateLuggageHint(els, luggageCounts) {
-        const total = totalLuggageCount(luggageCounts);
-        els.luggageTotalEl.textContent = total > 0
-            ? `Total: ${total} piece${total === 1 ? '' : 's'} (${luggageSummary(luggageCounts)})`
-            : '';
-    }
-
     function readState() {
-        const checkedDirection = Array.from(directionEls).find((el) => el.checked);
-        const direction = checkedDirection ? checkedDirection.value : DEFAULT_DIRECTION;
         const locationId = locationEl.value;
         return {
             direction,
@@ -367,7 +391,7 @@ export function createBookingCalculator() {
         if (!state.locationId || quote.basePrice === null) {
             resultEl.innerHTML = `
                 <p class="mb-0"><strong>${quote.vehicle.vehicle}</strong> (up to ${quote.vehicle.capacity} passengers) fits your group.</p>
-                <p class="mb-0 text-secondary">Choose a ${locationLabelText(state.direction).toLowerCase()} to see the indicative price.</p>
+                <p class="mb-0 text-secondary">Choose a ${locationRoleLabel(state.direction)} to see the indicative price.</p>
             `;
             return;
         }
@@ -424,9 +448,8 @@ export function createBookingCalculator() {
 
     function update() {
         const state = readState();
-        locationLabelEl.textContent = locationLabelText(state.direction);
 
-        const roundTripAvailable = state.direction === 'from-airport';
+        const roundTripAvailable = state.direction === DIRECTION_AIRPORT_PICKUP;
         roundTripFieldEl.hidden = !roundTripAvailable;
         if (!roundTripAvailable) {
             roundTripEl.checked = false;
@@ -473,9 +496,22 @@ export function createBookingCalculator() {
     ];
     inputEls.forEach((el) => el.addEventListener('input', update));
 
-    const changeEls = [...directionEls, roundTripEl, ...outboundEls.addOnEls, ...returnEls.addOnEls];
+    const changeEls = [roundTripEl, ...outboundEls.addOnEls, ...returnEls.addOnEls];
     changeEls.forEach((el) => el.addEventListener('change', update));
 
+    swapDirectionEl.addEventListener('click', () => {
+        direction = direction === DIRECTION_AIRPORT_PICKUP ? DIRECTION_AIRPORT_DESTINATION : DIRECTION_AIRPORT_PICKUP;
+        layoutRoute();
+        update();
+        // The swap button has no native checked/pressed state to announce
+        // on its own (unlike the radio buttons it replaced), so a visually-
+        // hidden live region confirms the new arrangement for screen-reader
+        // users - sighted users already see it from the swapped fields.
+        const airportRole = direction === DIRECTION_AIRPORT_PICKUP ? 'pick-up' : 'destination';
+        swapAnnouncementEl.textContent = `${AIRPORT_LABEL} is now the ${airportRole}.`;
+    });
+
+    layoutRoute();
     update();
 
     return section;

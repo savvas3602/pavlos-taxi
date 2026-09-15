@@ -20,3 +20,37 @@
     height: 4.5rem;
     font-size: 1.75rem;
 }
+
+/*
+ * Below md, the pick-up/destination fields (both .form-floating boxes of
+ * identical height, see BookingCalculator.js) stack in a flex column with
+ * a real gap (gap-4) between them, and this swap button floats over that
+ * gap instead of taking its own row - Bootstrap has no responsive variant
+ * of the position utilities, so this needs a small media query. A flex
+ * `gap` (not a margin-based row gutter) is used deliberately: it's simply
+ * skipped for an absolutely-positioned child, so this button can't end up
+ * with a stray margin pushing `top: 50%` off-center the way it would with
+ * Bootstrap's grid gutters. The gap has to stay wide enough that the
+ * centered button doesn't dip into either select's own padding-top/
+ * padding-bottom far enough to cover its visible text (label or value) -
+ * if the button ever grows, or a Bootstrap version changes
+ * .form-floating's internal padding, re-measure the overlap rather than
+ * assuming gap-4 is still enough. The empty part of this strip must
+ * ignore pointer events - it spans the full row width, and without this
+ * it would shadow clicks on the <select>s stacked underneath it. Only
+ * the button itself should be clickable.
+ */
+@media (max-width: 767.98px) {
+    .pav-swap-col {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        transform: translateY(-50%);
+        z-index: 2;
+        pointer-events: none;
+    }
+    .pav-swap-col .btn {
+        pointer-events: auto;
+    }
+}
