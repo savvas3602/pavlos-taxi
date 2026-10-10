@@ -2,7 +2,8 @@
 // Renders the "Get an Instant Quote" form: trip direction, location, and
 // per-trip details (date/time, adults, children, luggage, add-ons) drive an
 // auto-selected vehicle + indicative price (src/utils/booking-calculator.js).
-// When the pick-up is the airport, the customer can also add a return leg
+// When the pick-up is the airport, the customer must give their flight
+// number (so the arrival can be tracked), and can also add a return leg
 // (its own date/time, passengers, luggage, add-ons) for a round trip at a
 // 10% discount on the combined fare. Either way, the visitor sends the
 // result to us as a prefilled WhatsApp message - same backend-free,
@@ -16,6 +17,7 @@ const LUGGAGE_SIZES = [
     { id: 'l', label: 'Large' },
 ];
 const MAX_LUGGAGE_PER_SIZE = 3;
+const MAX_FLIGHT_NUMBER_LENGTH = 10;
 const ROUND_TRIP_DISCOUNT_PERCENT = Math.round(ROUND_TRIP_DISCOUNT * 100);
 
 // Every route is Larnaca Airport <-> a location (see LOCATIONS in
@@ -105,6 +107,31 @@ function nowLocalDateTimeString() {
     return now.toISOString().slice(0, 16);
 }
 
+// The <input>'s own `min` (nowLocalDateTimeString() above) is only set
+// once, when the form is built, so it goes stale as time passes - this
+// re-checks live on every update(). "YYYY-MM-DDTHH:mm" values sort
+// correctly as plain strings, so no Date parsing is needed here.
+function isFutureDateTime(value) {
+    return Boolean(value) && value >= nowLocalDateTimeString();
+}
+
+// null unless `pickupDateTime` is set and already in the past.
+function pastDateTimeWarning(pickupDateTime, legLabel = 'Pick-up') {
+    if (!pickupDateTime || isFutureDateTime(pickupDateTime)) {
+        return null;
+    }
+    return `${legLabel} date & time must be in the future.`;
+}
+
+// null unless both legs' times are set and the return isn't after the
+// outbound - only meaningful for a round trip.
+function returnBeforeOutboundWarning(outboundDateTime, returnDateTime) {
+    if (!outboundDateTime || !returnDateTime || returnDateTime > outboundDateTime) {
+        return null;
+    }
+    return 'Return date & time must be after the outbound pick-up.';
+}
+
 function formatPickupDateTime(value) {
     if (!value) {
         return null;
@@ -185,6 +212,9 @@ function legDetailLines(pickup, destination, legState, quote) {
     const lines = [`- Pick-up: ${pickup}`, `- Destination: ${destination}`];
     if (pickupDateTime) {
         lines.push(`- Pick-up date & time: ${pickupDateTime}`);
+    }
+    if (legState.flightNumber) {
+        lines.push(`- Flight number: ${legState.flightNumber}`);
     }
     lines.push(
         `- Passengers: ${legState.adults} adult(s), ${legState.children} child(ren)`,
@@ -291,6 +321,12 @@ export function createBookingCalculator() {
                                     <div class="form-text">Add a return journey back to ${AIRPORT_LABEL} and save ${ROUND_TRIP_DISCOUNT_PERCENT}% on the combined fare.</div>
                                 </div>
                                 <div id="booking-outbound-heading" class="col-12 fw-semibold text-secondary text-uppercase small mt-2" hidden>Trip 1 — Outbound</div>
+                                <div class="col-12 col-md-6" id="booking-flight-number-field" hidden>
+                                    <label for="booking-flight-number" class="form-label fw-semibold">Flight number</label>
+                                    <input type="text" id="booking-flight-number" class="form-control text-uppercase"
+                                           placeholder="e.g. A3 902" maxlength="${MAX_FLIGHT_NUMBER_LENGTH}" autocomplete="off" autocapitalize="characters" required>
+                                    <div class="form-text">Required for airport pick-ups, so we can track your arrival.</div>
+                                </div>
                                 ${tripFieldsHtml('outbound')}
 
                                 <div id="booking-return-section" class="col-12" hidden>
@@ -330,6 +366,8 @@ export function createBookingCalculator() {
     const airportEl = section.querySelector('#booking-airport');
     const locationEl = section.querySelector('#booking-location');
     const outboundHeadingEl = section.querySelector('#booking-outbound-heading');
+    const flightNumberFieldEl = section.querySelector('#booking-flight-number-field');
+    const flightNumberEl = section.querySelector('#booking-flight-number');
     const returnSectionEl = section.querySelector('#booking-return-section');
     const resultEl = section.querySelector('#booking-result');
     const ctaEl = section.querySelector('#booking-cta');
@@ -369,15 +407,22 @@ export function createBookingCalculator() {
 
     function readState() {
         const locationId = locationEl.value;
+        // Only the outbound leg can start at the airport (the return leg of
+        // a round trip always ends there), so the flight number lives on
+        // that leg - and is dropped when the airport isn't the pick-up, so
+        // a value typed before a swap can't leak into the message.
+        const flightNumber = direction === DIRECTION_AIRPORT_PICKUP
+            ? flightNumberEl.value.trim().toUpperCase()
+            : '';
         return {
             direction,
             locationId,
-            outbound: readLegState(outboundEls, locationId),
+            outbound: { ...readLegState(outboundEls, locationId), flightNumber },
             returnTrip: readLegState(returnEls, locationId),
         };
     }
 
-    function renderResult(state, quote) {
+    function renderResult(state, quote, dateTimeWarning) {
         if (quote.totalPassengers === 0) {
             resultEl.innerHTML = `<p class="mb-0 text-secondary">Add at least one passenger to see your vehicle and indicative price.</p>`;
             return;
@@ -397,17 +442,19 @@ export function createBookingCalculator() {
         }
 
         const addOnsList = addOnsListHtml(quote.addOns);
+        const warningHtml = dateTimeWarning ? `<p class="mb-1 text-danger">${dateTimeWarning}</p>` : '';
 
         resultEl.innerHTML = `
             <p class="mb-1"><strong>${quote.vehicle.vehicle}</strong> (up to ${quote.vehicle.capacity} passengers)</p>
             <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${quote.basePrice}</p>
             ${addOnsList}
             <p class="fs-4 fw-bold mb-1">Total: ${CURRENCY_SYMBOL}${quote.total}</p>
+            ${warningHtml}
             <p class="mb-0 text-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
         `;
     }
 
-    function renderRoundTripResult(state, outboundQuote, returnQuote, combined) {
+    function renderRoundTripResult(state, outboundQuote, returnQuote, combined, dateTimeWarning) {
         if (outboundQuote.totalPassengers === 0 || returnQuote.totalPassengers === 0) {
             resultEl.innerHTML = `<p class="mb-0 text-secondary">Add at least one passenger to both trips to see your vehicles and indicative price.</p>`;
             return;
@@ -429,6 +476,8 @@ export function createBookingCalculator() {
             return;
         }
 
+        const warningHtml = dateTimeWarning ? `<p class="mb-1 text-danger">${dateTimeWarning}</p>` : '';
+
         resultEl.innerHTML = `
             <p class="mb-1"><strong>Trip 1 — Outbound</strong> (${outboundQuote.vehicle.vehicle})</p>
             <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${outboundQuote.basePrice}</p>
@@ -442,6 +491,7 @@ export function createBookingCalculator() {
             <p class="mb-1">Subtotal: ${CURRENCY_SYMBOL}${combined.subtotal}</p>
             <p class="mb-1">Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${CURRENCY_SYMBOL}${combined.discount}</p>
             <p class="fs-4 fw-bold mb-1">Total: ${CURRENCY_SYMBOL}${combined.total}</p>
+            ${warningHtml}
             <p class="mb-0 text-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
         `;
     }
@@ -450,6 +500,10 @@ export function createBookingCalculator() {
         const state = readState();
 
         const roundTripAvailable = state.direction === DIRECTION_AIRPORT_PICKUP;
+        // Same condition as the round trip option: an airport pick-up means
+        // an arriving flight, which we need the number of to book.
+        flightNumberFieldEl.hidden = !roundTripAvailable;
+        const flightNumberValid = !roundTripAvailable || Boolean(state.outbound.flightNumber);
         roundTripFieldEl.hidden = !roundTripAvailable;
         if (!roundTripAvailable) {
             roundTripEl.checked = false;
@@ -468,17 +522,27 @@ export function createBookingCalculator() {
         if (roundTrip) {
             const returnQuote = calculateQuote(state.returnTrip);
             const combined = combineRoundTripQuote(outboundQuote, returnQuote);
-            renderRoundTripResult(state, outboundQuote, returnQuote, combined);
+            const outboundTimeValid = isFutureDateTime(state.outbound.pickupDateTime);
+            const returnTimeValid = isFutureDateTime(state.returnTrip.pickupDateTime);
+            const returnBeforeOutboundMsg = returnBeforeOutboundWarning(state.outbound.pickupDateTime, state.returnTrip.pickupDateTime);
+            const dateTimeWarning = pastDateTimeWarning(state.outbound.pickupDateTime, 'Outbound pick-up')
+                || pastDateTimeWarning(state.returnTrip.pickupDateTime, 'Return')
+                || returnBeforeOutboundMsg;
+            renderRoundTripResult(state, outboundQuote, returnQuote, combined, dateTimeWarning);
             canBook = Boolean(state.locationId)
-                && Boolean(state.outbound.pickupDateTime)
-                && Boolean(state.returnTrip.pickupDateTime)
+                && flightNumberValid
+                && outboundTimeValid
+                && returnTimeValid
+                && !returnBeforeOutboundMsg
                 && combined.total !== null
                 && !outboundQuote.overCapacity
                 && !returnQuote.overCapacity;
             message = canBook ? buildRoundTripMessage(state, outboundQuote, returnQuote, combined) : null;
         } else {
-            renderResult(state, outboundQuote);
-            canBook = Boolean(state.locationId) && Boolean(state.outbound.pickupDateTime)
+            const outboundTimeValid = isFutureDateTime(state.outbound.pickupDateTime);
+            const dateTimeWarning = pastDateTimeWarning(state.outbound.pickupDateTime);
+            renderResult(state, outboundQuote, dateTimeWarning);
+            canBook = Boolean(state.locationId) && flightNumberValid && outboundTimeValid
                 && outboundQuote.total !== null && !outboundQuote.overCapacity;
             message = canBook ? buildOneWayMessage(state, outboundQuote) : null;
         }
@@ -490,7 +554,7 @@ export function createBookingCalculator() {
     }
 
     const inputEls = [
-        locationEl,
+        locationEl, flightNumberEl,
         outboundEls.pickupTimeEl, outboundEls.adultsEl, outboundEls.childrenEl, ...outboundEls.luggageCountEls,
         returnEls.pickupTimeEl, returnEls.adultsEl, returnEls.childrenEl, ...returnEls.luggageCountEls,
     ];
