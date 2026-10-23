@@ -36,38 +36,46 @@ export const VEHICLES = [
     { id: '8-seater', vehicle: 'Mercedes Vito', capacity: 8 },
 ];
 
-// Base fare per vehicle tier x location, in EUR. Same fare either direction
-// (Larnaca Airport -> location or location -> Larnaca Airport).
+// A trip whose pick-up time falls in this window (local time, "HH:mm";
+// start inclusive, end exclusive - it wraps past midnight) pays the
+// `eveningSurcharge` of its PRICING entry on top of the base fare.
+export const EVENING_START = '20:30';
+export const EVENING_END = '06:00';
+
+// Base fare and evening surcharge per vehicle tier x location, in EUR. Same
+// either direction (Larnaca Airport -> location or location -> Larnaca
+// Airport). The surcharge is kept per entry, not as one constant, so it
+// can differ by route/vehicle later.
 export const PRICING = {
     '4-seater': {
-        'lca-city': 20,
-        'lca-tourist-area': 35,
-        'ayia-napa': 65,
-        'protaras': 75,
-        'limassol-city': 80,
-        'limassol-tourist-area': 70,
-        'paphos-city': 135,
-        'paphos-airport': 150,
+        'lca-city': { fare: 20, eveningSurcharge: 10 },
+        'lca-tourist-area': { fare: 35, eveningSurcharge: 10 },
+        'ayia-napa': { fare: 65, eveningSurcharge: 10 },
+        'protaras': { fare: 75, eveningSurcharge: 10 },
+        'limassol-city': { fare: 80, eveningSurcharge: 10 },
+        'limassol-tourist-area': { fare: 70, eveningSurcharge: 10 },
+        'paphos-city': { fare: 135, eveningSurcharge: 10 },
+        'paphos-airport': { fare: 150, eveningSurcharge: 10 },
     },
     '6-seater': {
-        'lca-city': 30,
-        'lca-tourist-area': 45,
-        'ayia-napa': 90,
-        'protaras': 100,
-        'limassol-city': 100,
-        'limassol-tourist-area': 90,
-        'paphos-city': 170,
-        'paphos-airport': 200,
+        'lca-city': { fare: 30, eveningSurcharge: 10 },
+        'lca-tourist-area': { fare: 45, eveningSurcharge: 10 },
+        'ayia-napa': { fare: 90, eveningSurcharge: 10 },
+        'protaras': { fare: 100, eveningSurcharge: 10 },
+        'limassol-city': { fare: 100, eveningSurcharge: 10 },
+        'limassol-tourist-area': { fare: 90, eveningSurcharge: 10 },
+        'paphos-city': { fare: 170, eveningSurcharge: 10 },
+        'paphos-airport': { fare: 200, eveningSurcharge: 10 },
     },
     '8-seater': {
-        'lca-city': 40,
-        'lca-tourist-area': 50,
-        'ayia-napa': 100,
-        'protaras': 110,
-        'limassol-city': 110,
-        'limassol-tourist-area': 100,
-        'paphos-city': 180,
-        'paphos-airport': 220,
+        'lca-city': { fare: 40, eveningSurcharge: 10 },
+        'lca-tourist-area': { fare: 50, eveningSurcharge: 10 },
+        'ayia-napa': { fare: 100, eveningSurcharge: 10 },
+        'protaras': { fare: 110, eveningSurcharge: 10 },
+        'limassol-city': { fare: 110, eveningSurcharge: 10 },
+        'limassol-tourist-area': { fare: 100, eveningSurcharge: 10 },
+        'paphos-city': { fare: 180, eveningSurcharge: 10 },
+        'paphos-airport': { fare: 220, eveningSurcharge: 10 },
     },
 };
 

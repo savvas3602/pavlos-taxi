@@ -8,7 +8,9 @@
 // 10% discount on the combined fare. Either way, the visitor sends the
 // result to us as a prefilled WhatsApp message - same backend-free,
 // WhatsApp-to-human booking model the rest of the site already uses.
-import { LOCATIONS, ADD_ONS, CURRENCY_SYMBOL, WHATSAPP_URL, AIRPORT_LABEL, ROUND_TRIP_DISCOUNT } from '../config.js';
+import {
+    LOCATIONS, ADD_ONS, CURRENCY_SYMBOL, WHATSAPP_URL, AIRPORT_LABEL, ROUND_TRIP_DISCOUNT, EVENING_START, EVENING_END,
+} from '../config.js';
 import { calculateQuote, combineRoundTripQuote, MAX_PASSENGERS } from '../utils/booking-calculator.js';
 
 const LUGGAGE_SIZES = [
@@ -19,6 +21,7 @@ const LUGGAGE_SIZES = [
 const MAX_LUGGAGE_PER_SIZE = 3;
 const MAX_FLIGHT_NUMBER_LENGTH = 10;
 const ROUND_TRIP_DISCOUNT_PERCENT = Math.round(ROUND_TRIP_DISCOUNT * 100);
+const EVENING_SURCHARGE_LABEL = `Evening surcharge (${EVENING_START}–${EVENING_END})`;
 
 // Every route is Larnaca Airport <-> a location (see LOCATIONS in
 // config.js) - the customer picks which end the airport is via the
@@ -170,6 +173,16 @@ function addOnsListHtml(addOns) {
     return `<ul class="mb-2 ps-3">${addOns.map(addOnLineHtml).join('')}</ul>`;
 }
 
+// Empty unless the leg's pick-up time is in the evening window (see
+// isEveningPickup() in booking-calculator.js) - shown as its own line in
+// the breakdown, right under the base fare it's added to.
+function eveningSurchargeHtml(quote) {
+    if (!quote.eveningSurcharge) {
+        return '';
+    }
+    return `<p class="mb-1">${EVENING_SURCHARGE_LABEL}: +${CURRENCY_SYMBOL}${quote.eveningSurcharge}</p>`;
+}
+
 // Pick-up date/time, adults, children, luggage and add-ons for one leg of
 // the trip - identical shape for the outbound leg and (when round trip is
 // on) the return leg, just with ids/data-trip scoped by `prefix`.
@@ -178,6 +191,7 @@ function tripFieldsHtml(prefix) {
         <div class="col-12 col-md-6">
             <label for="booking-${prefix}-pickup-time" class="form-label fw-semibold">Pick-up date &amp; time</label>
             <input type="datetime-local" id="booking-${prefix}-pickup-time" class="form-control" min="${nowLocalDateTimeString()}">
+            <div id="booking-${prefix}-pickup-time-feedback" class="invalid-feedback"></div>
         </div>
         <div class="col-6 col-md-3">
             <label for="booking-${prefix}-adults" class="form-label fw-semibold">Adults</label>
@@ -222,6 +236,9 @@ function legDetailLines(pickup, destination, legState, quote) {
     );
     if (quote.addOns.length) {
         lines.push(`- Add-ons: ${quote.addOns.map((a) => a.label).join(', ')}`);
+    }
+    if (quote.eveningSurcharge) {
+        lines.push(`- ${EVENING_SURCHARGE_LABEL}: +${CURRENCY_SYMBOL}${quote.eveningSurcharge}`);
     }
     if (quote.vehicle) {
         lines.push(`- Vehicle: ${quote.vehicle.vehicle} (up to ${quote.vehicle.capacity} passengers)`);
@@ -395,6 +412,7 @@ export function createBookingCalculator() {
     function legEls(prefix) {
         return {
             pickupTimeEl: section.querySelector(`#booking-${prefix}-pickup-time`),
+            pickupTimeFeedbackEl: section.querySelector(`#booking-${prefix}-pickup-time-feedback`),
             adultsEl: section.querySelector(`#booking-${prefix}-adults`),
             childrenEl: section.querySelector(`#booking-${prefix}-children`),
             luggageCountEls: section.querySelectorAll(`.booking-luggage-count[data-trip="${prefix}"]`),
@@ -447,6 +465,7 @@ export function createBookingCalculator() {
         resultEl.innerHTML = `
             <p class="mb-1"><strong>${quote.vehicle.vehicle}</strong> (up to ${quote.vehicle.capacity} passengers)</p>
             <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${quote.basePrice}</p>
+            ${eveningSurchargeHtml(quote)}
             ${addOnsList}
             <p class="fs-4 fw-bold mb-1">Total: ${CURRENCY_SYMBOL}${quote.total}</p>
             ${warningHtml}
@@ -481,10 +500,12 @@ export function createBookingCalculator() {
         resultEl.innerHTML = `
             <p class="mb-1"><strong>Trip 1 — Outbound</strong> (${outboundQuote.vehicle.vehicle})</p>
             <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${outboundQuote.basePrice}</p>
+            ${eveningSurchargeHtml(outboundQuote)}
             ${addOnsListHtml(outboundQuote.addOns)}
             <p class="mb-2 fw-semibold">Trip 1 total: ${CURRENCY_SYMBOL}${outboundQuote.total}</p>
             <p class="mb-1"><strong>Trip 2 — Return</strong> (${returnQuote.vehicle.vehicle})</p>
             <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${returnQuote.basePrice}</p>
+            ${eveningSurchargeHtml(returnQuote)}
             ${addOnsListHtml(returnQuote.addOns)}
             <p class="mb-2 fw-semibold">Trip 2 total: ${CURRENCY_SYMBOL}${returnQuote.total}</p>
             <hr class="my-2">
@@ -525,6 +546,15 @@ export function createBookingCalculator() {
             const outboundTimeValid = isFutureDateTime(state.outbound.pickupDateTime);
             const returnTimeValid = isFutureDateTime(state.returnTrip.pickupDateTime);
             const returnBeforeOutboundMsg = returnBeforeOutboundWarning(state.outbound.pickupDateTime, state.returnTrip.pickupDateTime);
+            // Flagged on the return field itself too (not just in the
+            // result box below, which only shows once a price is ready),
+            // and the picker's floor follows the outbound pick-up so
+            // earlier dates can't be chosen there in the first place.
+            returnEls.pickupTimeEl.min = isFutureDateTime(state.outbound.pickupDateTime)
+                ? state.outbound.pickupDateTime
+                : nowLocalDateTimeString();
+            returnEls.pickupTimeEl.classList.toggle('is-invalid', Boolean(returnBeforeOutboundMsg));
+            returnEls.pickupTimeFeedbackEl.textContent = returnBeforeOutboundMsg || '';
             const dateTimeWarning = pastDateTimeWarning(state.outbound.pickupDateTime, 'Outbound pick-up')
                 || pastDateTimeWarning(state.returnTrip.pickupDateTime, 'Return')
                 || returnBeforeOutboundMsg;

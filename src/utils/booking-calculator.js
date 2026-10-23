@@ -1,7 +1,7 @@
 // booking-calculator.js - pure vehicle-selection/pricing logic for the
 // book-now quote form. No DOM access here on purpose, so the rules can be
 // reasoned about (and tested) independently of the UI that renders them.
-import { VEHICLES, PRICING, ADD_ONS, ROUND_TRIP_DISCOUNT } from '../config.js';
+import { VEHICLES, PRICING, ADD_ONS, ROUND_TRIP_DISCOUNT, EVENING_START, EVENING_END } from '../config.js';
 
 export const MAX_PASSENGERS = Math.max(...VEHICLES.map((v) => v.capacity));
 
@@ -34,26 +34,42 @@ export function selectVehicle(totalPassengers) {
  *   - { totalPassengers: 0, vehicle: null, ... }              nothing selected yet
  *   - { vehicle: null, totalPassengers, overCapacity: true }  party too large for any vehicle
  *   - { vehicle, basePrice: null, ... }                       vehicle found but no price for that location
- *   - { vehicle, basePrice, addOns, addOnsTotal, total }      normal quote
+ *   - { vehicle, basePrice, eveningSurcharge, addOns, addOnsTotal, total }  normal quote
  */
-export function calculateQuote({ locationId, adults = 0, children = 0, addOnIds = [] } = {}) {
+export function calculateQuote({ locationId, pickupDateTime = '', adults = 0, children = 0, addOnIds = [] } = {}) {
     const totalPassengers = adults + children;
 
     if (totalPassengers === 0) {
-        return { totalPassengers, vehicle: null, overCapacity: false, basePrice: null, addOns: [], addOnsTotal: 0, total: null };
+        return { totalPassengers, vehicle: null, overCapacity: false, basePrice: null, eveningSurcharge: 0, addOns: [], addOnsTotal: 0, total: null };
     }
 
     const vehicle = selectVehicle(totalPassengers);
     if (!vehicle) {
-        return { totalPassengers, vehicle: null, overCapacity: true, basePrice: null, addOns: [], addOnsTotal: 0, total: null };
+        return { totalPassengers, vehicle: null, overCapacity: true, basePrice: null, eveningSurcharge: 0, addOns: [], addOnsTotal: 0, total: null };
     }
 
     const addOns = ADD_ONS.filter((addOn) => addOnIds.includes(addOn.id));
     const addOnsTotal = addOns.reduce((sum, addOn) => sum + addOn.price, 0);
-    const basePrice = PRICING[vehicle.id]?.[locationId] ?? null;
-    const total = basePrice === null ? null : basePrice + addOnsTotal;
+    const pricing = PRICING[vehicle.id]?.[locationId] ?? null;
+    const basePrice = pricing ? pricing.fare : null;
+    const eveningSurcharge = pricing && isEveningPickup(pickupDateTime) ? pricing.eveningSurcharge : 0;
+    const total = basePrice === null ? null : basePrice + eveningSurcharge + addOnsTotal;
 
-    return { totalPassengers, vehicle, overCapacity: false, basePrice, addOns, addOnsTotal, total };
+    return { totalPassengers, vehicle, overCapacity: false, basePrice, eveningSurcharge, addOns, addOnsTotal, total };
+}
+
+/**
+ * Whether a "YYYY-MM-DDTHH:mm" pick-up time (as typed into the form - local
+ * time, no conversion) falls in the evening window. False while no time has
+ * been chosen yet. "HH:mm" values sort correctly as plain strings, and the
+ * window wraps past midnight, hence the OR.
+ */
+export function isEveningPickup(pickupDateTime) {
+    if (!pickupDateTime) {
+        return false;
+    }
+    const time = pickupDateTime.slice(11, 16);
+    return time >= EVENING_START || time < EVENING_END;
 }
 
 /**
