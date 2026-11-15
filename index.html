@@ -11,54 +11,88 @@
 <div class="pav-hero-viewport">
     <load src="partials/body-top.html" />
 
-    <!-- Page Hero -->
-    <div id="hero-section" class="container-fluid text-light d-flex align-items-center justify-content-center position-relative overflow-hidden">
-        <picture>
-            <source
-                type="image/avif"
-                srcset="/src/assets/hero/profile-640.avif 640w,
-                        /src/assets/hero/profile-828.avif 828w,
-                        /src/assets/hero/profile-1080.avif 1080w,
-                        /src/assets/hero/profile-1440.avif 1440w,
-                        /src/assets/hero/profile-1920.avif 1920w,
-                        /src/assets/hero/profile-2560.avif 2560w"
-                sizes="100vw">
-            <source
-                type="image/webp"
-                srcset="/src/assets/hero/profile-640.webp 640w,
-                        /src/assets/hero/profile-828.webp 828w,
-                        /src/assets/hero/profile-1080.webp 1080w,
-                        /src/assets/hero/profile-1440.webp 1440w,
-                        /src/assets/hero/profile-1920.webp 1920w,
-                        /src/assets/hero/profile-2560.webp 2560w"
-                sizes="100vw">
-            <img
-                src="/src/assets/hero/profile-1080.jpg"
-                srcset="/src/assets/hero/profile-640.jpg 640w,
-                        /src/assets/hero/profile-828.jpg 828w,
-                        /src/assets/hero/profile-1080.jpg 1080w,
-                        /src/assets/hero/profile-1440.jpg 1440w,
-                        /src/assets/hero/profile-1920.jpg 1920w,
-                        /src/assets/hero/profile-2560.jpg 2560w"
-                sizes="100vw"
-                width="4501" height="4500"
-                alt="A yellow Mercedes taxi with Larnaca's airport tower, a plane and palm trees"
-                loading="eager" fetchpriority="high"
-                class="position-absolute top-0 start-0 w-100 h-100"
-                style="object-fit: cover;">
-        </picture>
-        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1));"></div>
+    <!-- Page Hero: promo copy (left) + brand image (right). Stacks copy-first below lg. -->
+    <div id="hero-section" class="d-flex flex-column">
+        <div class="row g-0 flex-grow-1">
+            <div class="col-lg-6 bg-dark text-light d-flex align-items-center">
+                <div class="pav-hero-copy mx-auto px-4 px-md-5 py-5">
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        <span class="d-inline-flex align-items-center bg-warning text-dark rounded-pill px-3 py-1">
+                            <i class="bi bi-geo-alt-fill me-2"></i>
+                            <span>Larnaca</span>
+                        </span>
+                        <span class="d-inline-flex align-items-center bg-warning text-dark rounded-pill px-3 py-1">
+                            <i class="bi bi-telephone-fill me-2"></i>
+                            <a href="%VITE_TEL_HREF%" class="text-dark text-decoration-none">%VITE_PHONE_DISPLAY%</a>
+                        </span>
+                    </div>
 
-        <div class="position-absolute top-0 start-0 p-4">
-            <div class="d-flex flex-row align-items-center">
-                <span class="d-flex align-items-center me-4 bg-warning text-dark rounded-pill px-3 py-1">
-                    <i class="bi bi-geo-alt-fill me-2"></i>
-                    <span>Larnaca</span>
-                </span>
-                <span class="d-flex align-items-center bg-warning text-dark rounded-pill px-3 py-1">
-                    <i class="bi bi-telephone-fill me-2"></i>
-                    <a href="%VITE_TEL_HREF%" class="text-dark text-decoration-none">%VITE_PHONE_DISPLAY%</a>
-                </span>
+                    <h1 class="pav-hero-title fw-bold lh-sm mb-4">
+                        Land in Larnaca.
+                        <span class="d-block text-warning">Your ride is already waiting.</span>
+                    </h1>
+                    <p class="lead text-light text-opacity-75 mb-4">
+                        Premium Mercedes transfers from Larnaca Airport to Larnaca, Ayia Napa,
+                        Protaras, Limassol and Paphos. We track your flight, so a delay never
+                        means a missed pick-up.
+                    </p>
+
+                    <ul class="list-unstyled d-flex flex-wrap column-gap-4 row-gap-2 mb-4 mb-md-5">
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-airplane-fill text-warning me-2"></i>Flight monitoring
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-car-front-fill text-warning me-2"></i>Mercedes fleet
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <i class="bi bi-clock-fill text-warning me-2"></i>Available 24/7
+                        </li>
+                    </ul>
+
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="#booking-calculator" class="btn btn-warning btn-lg fw-bold px-4">Get an instant quote</a>
+                        <a href="%VITE_WHATSAPP_URL%" target="_blank" rel="noopener" class="btn btn-outline-light btn-lg px-4">
+                            <i class="bi bi-whatsapp me-2"></i>Book on WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 bg-dark position-relative pav-hero-media">
+                <picture>
+                    <source
+                        type="image/avif"
+                        srcset="/src/assets/hero/profile-640.avif 640w,
+                                /src/assets/hero/profile-828.avif 828w,
+                                /src/assets/hero/profile-1080.avif 1080w,
+                                /src/assets/hero/profile-1440.avif 1440w,
+                                /src/assets/hero/profile-1920.avif 1920w,
+                                /src/assets/hero/profile-2560.avif 2560w"
+                        sizes="(min-width: 992px) 50vw, 100vw">
+                    <source
+                        type="image/webp"
+                        srcset="/src/assets/hero/profile-640.webp 640w,
+                                /src/assets/hero/profile-828.webp 828w,
+                                /src/assets/hero/profile-1080.webp 1080w,
+                                /src/assets/hero/profile-1440.webp 1440w,
+                                /src/assets/hero/profile-1920.webp 1920w,
+                                /src/assets/hero/profile-2560.webp 2560w"
+                        sizes="(min-width: 992px) 50vw, 100vw">
+                    <img
+                        src="/src/assets/hero/profile-1080.jpg"
+                        srcset="/src/assets/hero/profile-640.jpg 640w,
+                                /src/assets/hero/profile-828.jpg 828w,
+                                /src/assets/hero/profile-1080.jpg 1080w,
+                                /src/assets/hero/profile-1440.jpg 1440w,
+                                /src/assets/hero/profile-1920.jpg 1920w,
+                                /src/assets/hero/profile-2560.jpg 2560w"
+                        sizes="(min-width: 992px) 50vw, 100vw"
+                        width="4501" height="4500"
+                        alt="A yellow Mercedes taxi with Larnaca's airport tower, a plane and palm trees"
+                        loading="eager" fetchpriority="high"
+                        class="position-absolute top-0 start-0 w-100 h-100"
+                        style="object-fit: contain;">
+                </picture>
             </div>
         </div>
     </div>

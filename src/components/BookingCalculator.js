@@ -295,7 +295,7 @@ function buildRoundTripMessage(state, outboundQuote, returnQuote, combined) {
 export function createBookingCalculator() {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
-    <div class="container-fluid py-5 scroll-animate">
+    <div id="booking-calculator" class="container-fluid py-5 scroll-animate">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-8">

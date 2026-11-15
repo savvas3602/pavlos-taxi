@@ -17,6 +17,50 @@
 }
 
 /*
+ * Keeps the promo copy at a readable line length on wide screens (the cap
+ * includes the column's side padding - wide enough for both CTAs on one line).
+ */
+.pav-hero-copy {
+    max-width: 44rem;
+}
+
+/*
+ * Headline scales with the viewport so it stays ~3 lines in the half-width
+ * column at small laptop sizes (where .display-4 would wrap to 4+ lines and
+ * push the CTAs below the fold), capping at .display-4's 3.5rem.
+ */
+.pav-hero-title {
+    font-size: clamp(2.25rem, 0.05rem + 3.85vw, 3.5rem);
+}
+
+/*
+ * Image half of the split hero. The <img> is absolutely positioned so it
+ * never drives the hero's height: on lg+ this column simply stretches to
+ * match the copy column. Below lg the columns stack (copy first) and this
+ * column has no in-flow content, so it needs a height of its own.
+ */
+.pav-hero-media {
+    aspect-ratio: 4 / 3;
+}
+
+@media (min-width: 992px) {
+    .pav-hero-media {
+        aspect-ratio: auto;
+    }
+}
+
+/*
+ * Breathing room around the image. It has to be padding on the <img> itself:
+ * the img is absolutely positioned to fill the column, so padding on the
+ * column or <picture> is ignored, while `object-fit: contain` fits the image
+ * inside the img's content box (i.e. inside this padding). The % resolves
+ * against the column's width, so the gap scales with the screen.
+ */
+.pav-hero-media img {
+    padding: clamp(1.5rem, 10%, 7rem);
+}
+
+/*
  * Shared subject-header gradient for interior pages (Contact, Fleet,
  * Airport Transfers, ...). Keeps the gradient + sizing in one place instead
  * of duplicating the inline style on every page.

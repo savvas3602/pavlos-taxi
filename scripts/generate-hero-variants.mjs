@@ -15,7 +15,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SOURCE = path.join(__dirname, '../src/assets/profile_image_02.jpg');
+const SOURCE = path.join(__dirname, '../src/assets/profile_img-02_circle.png');
 const OUT_DIR = path.join(__dirname, '../src/assets/hero');
 
 const WIDTHS = [640, 828, 1080, 1440, 1920, 2560];

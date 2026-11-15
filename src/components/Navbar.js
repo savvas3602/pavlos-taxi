@@ -1,7 +1,10 @@
 // Navbar.js - Plain JS component for Vite
 export function createNavbar() {
     const nav = document.createElement('nav');
-    nav.className = 'navbar navbar-expand-lg navbar-light bg-light sticky-top shadow';
+    nav.className = 'navbar navbar-expand-lg bg-dark sticky-top shadow';
+    // Dark color mode scoped to the navbar: adapts link, subtitle, toggler and
+    // collapsed-menu colors to the dark background.
+    nav.setAttribute('data-bs-theme', 'dark');
     nav.innerHTML = `
     <div class="container-fluid">
         <a class="navbar-brand mb-0 h1 d-flex align-items-center" href="index.html">
@@ -34,7 +37,7 @@ export function createNavbar() {
                 </li>
             </ul>
             <div class="d-flex justify-content-end align-items-center ms-auto">
-                <button type="button" class="btn btn-link text-secondary fs-4 p-0 ms-3 language-icon" data-bs-toggle="modal"
+                <button type="button" class="btn btn-link text-body-secondary fs-4 p-0 ms-3 language-icon" data-bs-toggle="modal"
                         data-bs-target="#languageModal" aria-label="Select Language">
                     <i class="bi bi-translate"></i>
                 </button>
