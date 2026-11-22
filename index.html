@@ -11,11 +11,13 @@
 <div class="pav-hero-viewport">
     <load src="partials/body-top.html" />
 
-    <!-- Page Hero: promo copy (left) + brand image (right). Stacks copy-first below lg. -->
+    <!-- Page Hero: promo copy (left) + brand image (right). Stacks image-first below lg (order-first on the image column; order-lg-last restores the side-by-side order).
+         Stacked, the copy drops its top padding (pt-0, back to pt-lg-5 side by side): the image's own padding already spaces the
+         circle from the pills - the same gap as above the circle - which keeps the CTAs higher on phones. -->
     <div id="hero-section" class="d-flex flex-column">
         <div class="row g-0 flex-grow-1">
             <div class="col-lg-6 bg-dark text-light d-flex align-items-center">
-                <div class="pav-hero-copy mx-auto px-4 px-md-5 py-5">
+                <div class="pav-hero-copy mx-auto px-4 px-md-5 pt-0 pt-lg-5 pb-5">
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         <span class="d-inline-flex align-items-center bg-warning text-dark rounded-pill px-3 py-1">
                             <i class="bi bi-geo-alt-fill me-2"></i>
@@ -58,7 +60,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-6 bg-dark position-relative pav-hero-media">
+            <div class="col-lg-6 order-first order-lg-last bg-dark position-relative pav-hero-media">
                 <picture>
                     <source
                         type="image/avif"

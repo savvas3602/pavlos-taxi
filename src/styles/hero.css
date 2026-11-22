@@ -36,7 +36,7 @@
 /*
  * Image half of the split hero. The <img> is absolutely positioned so it
  * never drives the hero's height: on lg+ this column simply stretches to
- * match the copy column. Below lg the columns stack (copy first) and this
+ * match the copy column. Below lg the columns stack (image first) and this
  * column has no in-flow content, so it needs a height of its own.
  */
 .pav-hero-media {
@@ -61,11 +61,11 @@
 }
 
 /*
- * Shared subject-header gradient for interior pages (Contact, Fleet,
- * Airport Transfers, ...). Keeps the gradient + sizing in one place instead
- * of duplicating the inline style on every page.
+ * Shared page header for interior pages (Contact, Fleet, Services, Airport
+ * Transfers). Sits on .bg-dark - the same surface as the navbar and the
+ * homepage hero - so the navbar flows straight into it, and the first section
+ * below (a .bg-body-tertiary band) marks where the header ends.
  */
-.pav-hero-gradient {
-    min-height: 55vh;
-    background: linear-gradient(135deg, #585859 0%, #7dbef3 100%);
+.pav-page-header {
+    min-height: 50vh;
 }

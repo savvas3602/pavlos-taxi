@@ -1,17 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <load src="partials/head-meta.html" />
     <title>Our Services | Paul's Taxi</title>
     <meta name="description" content="Airport transfers, local rides, private tours and corporate travel from Larnaca Airport, Cyprus. Flight monitoring, meet &amp; greet, and 24/7 availability."/>
     <style>
-        .nav-pills .nav-link {
-            color: #000;
-            background-color: transparent;
-        }
-        .nav-pills .nav-link.active {
-            background-color: #ffc107;
-            color: #000;
+        /* Tabs: light text that turns brand yellow on hover; the active tab is a
+           brand-yellow pill with dark text (same pairing as .btn-warning). */
+        #services-tabs {
+            --bs-nav-link-color: var(--bs-body-color);
+            --bs-nav-link-hover-color: var(--bs-warning);
+            --bs-nav-pills-link-active-bg: var(--bs-warning);
+            --bs-nav-pills-link-active-color: var(--bs-dark);
         }
         @media (max-width: 576px) {
             #services-tabs .nav-item {
@@ -24,10 +24,10 @@
     <load src="partials/body-top.html" />
 
 <!-- Page subject section -->
-<div class="container-fluid text-light d-flex align-items-center justify-content-left pav-hero-gradient">
-    <div class="text-left">
-        <h1 class="display-4 fw-bold mb-4">Our Services</h1>
-        <p class="lead fs-4">
+<div class="bg-dark d-flex align-items-center pav-page-header">
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold mb-4">Our <span class="text-warning">Services</span></h1>
+        <p class="lead fs-4 text-body-secondary mb-0">
             Comprehensive transportation solutions from Larnaca Airport.
             <br>Professional, reliable service for all your travel needs in Cyprus.
         </p>
@@ -36,7 +36,7 @@
 <!-- Page subject section -->
 
 <!-- Services Section -->
-<div class="container-fluid bg-light py-5 mb-4 scroll-animate">
+<div class="container-fluid bg-body-tertiary py-5 scroll-animate">
     <div class="d-flex justify-content-center mb-4">
         <div class="w-100 overflow-auto">
             <ul class="nav nav-pills flex-nowrap gap-2 justify-content-center" id="services-tabs" role="tablist">
@@ -69,18 +69,18 @@
         <div class="tab-pane fade show active" id="airportTransfers" role="tabpanel" aria-labelledby="airport-transfers-tab">
             <div class="row justify-content-center">
                 <div class="col-12 col-md-10 col-lg-8">
-                    <div class="card card-body shadow-lg pav-feature-card">
+                    <div class="card card-body shadow-lg bg-body-secondary pav-feature-card">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-airplane-engines-fill text-warning fs-3 me-2"></i>
                             <h2 class="fw-bold mb-0">Premium Airport Transfers</h2>
                         </div>
-                        <p>Seamless airport transportation with flight monitoring, meet & greet service, and luggage assistance.
+                        <p class="text-body-secondary">Seamless airport transportation with flight monitoring, meet & greet service, and luggage assistance.
                             <br>Available 24/7 for all major airports.
                         </p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Flight monitoring & delays adjustment</li>
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Meet & greet with name sign</li>
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Luggage assistance included</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Flight monitoring & delays adjustment</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Meet & greet with name sign</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Luggage assistance included</li>
                         </ul>
                         <div class="d-flex justify-content-start mt-3">
                             <a href="%VITE_WHATSAPP_URL%" target="_blank" rel="noopener" class="btn btn-warning">
@@ -94,18 +94,18 @@
         <div class="tab-pane fade" id="localRides" role="tabpanel" aria-labelledby="local-rides-tab">
             <div class="row justify-content-center">
                 <div class="col-12 col-md-10 col-lg-8">
-                    <div class="card card-body shadow-lg pav-feature-card">
+                    <div class="card card-body shadow-lg bg-body-secondary pav-feature-card">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-geo-alt-fill text-warning fs-3 me-2"></i>
                             <h2 class="fw-bold mb-0">Local Transportation</h2>
                         </div>
-                        <p>Point-to-point rides within the city and surrounding areas.<br>
+                        <p class="text-body-secondary">Point-to-point rides within the city and surrounding areas.<br>
                             Perfect for shopping, appointments, dining, and daily transportation needs.
                         </p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Hourly & daily rates available</li>
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Flexible scheduling</li>
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>City & suburban coverage</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Hourly & daily rates available</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Flexible scheduling</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>City & suburban coverage</li>
                         </ul>
                         <div class="d-flex justify-content-start mt-3">
                             <a href="%VITE_WHATSAPP_URL%" target="_blank" rel="noopener" class="btn btn-warning">
@@ -119,19 +119,19 @@
         <div class="tab-pane fade" id="privateTours" role="tabpanel" aria-labelledby="private-tours-tab">
             <div class="row justify-content-center">
                 <div class="col-12 col-md-10 col-lg-8">
-                    <div class="card card-body shadow-lg pav-feature-card">
+                    <div class="card card-body shadow-lg bg-body-secondary pav-feature-card">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-binoculars-fill text-warning fs-3 me-2"></i>
                             <h2 class="fw-bold mb-0">Private Tours</h2>
                         </div>
-                        <p>
+                        <p class="text-body-secondary">
                             Customized sightseeing experiences with knowledgeable multilingual drivers.<br>
                             Explore the city's highlights, hidden gems, and cultural attractions at your own pace.
                         </p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Customized itineraries</li>
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Multilingual tour guides</li>
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Flexible duration options</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Customized itineraries</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Multilingual tour guides</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Flexible duration options</li>
                         </ul>
                         <div class="d-flex justify-content-start mt-3">
                             <a href="%VITE_WHATSAPP_URL%" target="_blank" rel="noopener" class="btn btn-warning">
@@ -145,19 +145,19 @@
         <div class="tab-pane fade" id="corporateTravel" role="tabpanel" aria-labelledby="corporate-travel-tab">
             <div class="row justify-content-center">
                 <div class="col-12 col-md-10 col-lg-8">
-                    <div class="card card-body shadow-lg pav-feature-card">
+                    <div class="card card-body shadow-lg bg-body-secondary pav-feature-card">
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-briefcase-fill text-warning fs-3 me-2"></i>
                             <h2 class="fw-bold mb-0">Corporate Travel</h2>
                         </div>
-                        <p>
+                        <p class="text-body-secondary">
                             Professional transportation solutions for business travelers.<br>
                             Reliable service for meetings, conferences, airport transfers, and corporate events with account management options.
                         </p>
                         <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Corporate account management</li>
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Priority booking & scheduling</li>
-                            <li><i class="bi bi-check-circle-fill me-2 text-info"></i>Detailed billing & reporting</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Corporate account management</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Priority booking & scheduling</li>
+                            <li><i class="bi bi-check-circle-fill me-2 text-warning"></i>Detailed billing & reporting</li>
                         </ul>
                         <div class="d-flex justify-content-start mt-3">
                             <a href="%VITE_WHATSAPP_URL%" target="_blank" rel="noopener" class="btn btn-warning">
@@ -173,34 +173,40 @@
 <!-- End Services Section -->
 
 <!-- Service Features Section -->
-<div class="container mb-5 scroll-animate">
-    <h2 class="display-6 fw-bold text-center mb-4">Service Features</h2>
-    <p class="lead text-center mb-5">What makes our service exceptional across all transportation solutions</p>
+<div class="container py-5 scroll-animate">
+    <h2 class="display-6 fw-bold text-center mb-4">Service <span class="text-warning">Features</span></h2>
+    <p class="lead text-body-secondary text-center mb-5">What makes our service exceptional across all transportation solutions</p>
     <div class="row justify-content-center g-4">
         <div class="col-12 col-md-4">
-            <div class="card h-100 bg-light shadow-lg text-center pav-feature-card">
+            <div class="card h-100 bg-body-tertiary shadow-lg text-center pav-feature-card">
                 <div class="card-body">
-                    <i class="bi bi-clock-history text-primary fs-1 mb-3"></i>
+                    <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3 pav-service-icon">
+                        <i class="bi bi-clock-history text-warning"></i>
+                    </div>
                     <h5 class="fw-bold mb-2">24/7 Availability</h5>
-                    <p class="mb-0">Round-the-clock service to meet your transportation needs anytime, day or night.</p>
+                    <p class="text-body-secondary mb-0">Round-the-clock service to meet your transportation needs anytime, day or night.</p>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
-            <div class="card h-100 bg-light shadow-lg text-center pav-feature-card">
+            <div class="card h-100 bg-body-tertiary shadow-lg text-center pav-feature-card">
                 <div class="card-body">
-                    <i class="bi bi-whatsapp text-success fs-1 mb-3"></i>
+                    <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3 pav-service-icon">
+                        <i class="bi bi-whatsapp text-warning"></i>
+                    </div>
                     <h5 class="fw-bold mb-2">WhatsApp Booking</h5>
-                    <p class="mb-0">Instant quotes and easy booking through WhatsApp for maximum convenience and quick confirmation.</p>
+                    <p class="text-body-secondary mb-0">Instant quotes and easy booking through WhatsApp for maximum convenience and quick confirmation.</p>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
-            <div class="card h-100 bg-light shadow-lg text-center pav-feature-card">
+            <div class="card h-100 bg-body-tertiary shadow-lg text-center pav-feature-card">
                 <div class="card-body">
-                    <i class="bi bi-translate text-info fs-1 mb-3"></i>
+                    <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3 pav-service-icon">
+                        <i class="bi bi-translate text-warning"></i>
+                    </div>
                     <h5 class="fw-bold mb-2">Multilingual Service</h5>
-                    <p class="mb-0">English, Russian, and Hebrew speaking drivers to ensure clear communication and comfortable service.</p>
+                    <p class="text-body-secondary mb-0">English, Russian, and Hebrew speaking drivers to ensure clear communication and comfortable service.</p>
                 </div>
             </div>
         </div>

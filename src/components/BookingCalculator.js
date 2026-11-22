@@ -23,6 +23,15 @@ const MAX_FLIGHT_NUMBER_LENGTH = 10;
 const ROUND_TRIP_DISCOUNT_PERCENT = Math.round(ROUND_TRIP_DISCOUNT * 100);
 const EVENING_SURCHARGE_LABEL = `Evening surcharge (${EVENING_START}–${EVENING_END})`;
 
+// Every price shown - on the page and in the WhatsApp message - goes through
+// here. Amounts are already rounded to whole cents (roundToCents() in
+// booking-calculator.js); this only fixes how they print: whole euros stay
+// "€20", anything with cents always gets two decimals ("€5.50", not "€5.5").
+function formatPrice(amount) {
+    const value = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+    return `${CURRENCY_SYMBOL}${value}`;
+}
+
 // Every route is Larnaca Airport <-> a location (see LOCATIONS in
 // config.js) - the customer picks which end the airport is via the
 // pick-up/destination swap button (see layoutRoute() below). Pricing is the
@@ -153,7 +162,7 @@ function addOnFieldHtml(addOn, prefix) {
     return `
     <div class="form-check">
         <input class="form-check-input booking-addon" type="checkbox" id="${id}" data-trip="${prefix}" value="${addOn.id}">
-        <label class="form-check-label" for="${id}">${addOn.label} (+${CURRENCY_SYMBOL}${addOn.price})</label>
+        <label class="form-check-label" for="${id}">${addOn.label} (+${formatPrice(addOn.price)})</label>
     </div>
     `;
 }
@@ -163,7 +172,7 @@ function addOnFieldsHtml(prefix) {
 }
 
 function addOnLineHtml(addOn) {
-    return `<li>${addOn.label}: +${CURRENCY_SYMBOL}${addOn.price}</li>`;
+    return `<li>${addOn.label}: +${formatPrice(addOn.price)}</li>`;
 }
 
 function addOnsListHtml(addOns) {
@@ -173,6 +182,19 @@ function addOnsListHtml(addOns) {
     return `<ul class="mb-2 ps-3">${addOns.map(addOnLineHtml).join('')}</ul>`;
 }
 
+// Breakdown color coding: surcharges red, discounts green, the final total's
+// amount in brand yellow; base fares, add-ons and subtotals stay neutral
+// (add-ons are extras the visitor picked, not a penalty). The *-emphasis
+// variants are theme-aware - the plain text-danger/text-success are too dark
+// to read on the dark page (~3:1) - and the +/- signs, labels and icons carry
+// the meaning too, so it never depends on color alone.
+const SURCHARGE_CLASS = 'text-danger-emphasis';
+const DISCOUNT_CLASS = 'text-success-emphasis';
+
+function totalHtml(total) {
+    return `<p class="fs-4 fw-bold mb-1">Total: <span class="text-warning">${formatPrice(total)}</span></p>`;
+}
+
 // Empty unless the leg's pick-up time is in the evening window (see
 // isEveningPickup() in booking-calculator.js) - shown as its own line in
 // the breakdown, right under the base fare it's added to.
@@ -180,7 +202,7 @@ function eveningSurchargeHtml(quote) {
     if (!quote.eveningSurcharge) {
         return '';
     }
-    return `<p class="mb-1">${EVENING_SURCHARGE_LABEL}: +${CURRENCY_SYMBOL}${quote.eveningSurcharge}</p>`;
+    return `<p class="mb-1 ${SURCHARGE_CLASS}"><i class="bi bi-moon-stars-fill me-1" aria-hidden="true"></i>${EVENING_SURCHARGE_LABEL}: +${formatPrice(quote.eveningSurcharge)}</p>`;
 }
 
 // Pick-up date/time, adults, children, luggage and add-ons for one leg of
@@ -238,7 +260,7 @@ function legDetailLines(pickup, destination, legState, quote) {
         lines.push(`- Add-ons: ${quote.addOns.map((a) => a.label).join(', ')}`);
     }
     if (quote.eveningSurcharge) {
-        lines.push(`- ${EVENING_SURCHARGE_LABEL}: +${CURRENCY_SYMBOL}${quote.eveningSurcharge}`);
+        lines.push(`- ${EVENING_SURCHARGE_LABEL}: +${formatPrice(quote.eveningSurcharge)}`);
     }
     if (quote.vehicle) {
         lines.push(`- Vehicle: ${quote.vehicle.vehicle} (up to ${quote.vehicle.capacity} passengers)`);
@@ -258,7 +280,7 @@ function buildOneWayMessage(state, quote) {
         ...legDetailLines(pickup, destination, state.outbound, quote),
     ];
     if (quote.total !== null) {
-        lines.push(`- Indicative total: ${CURRENCY_SYMBOL}${quote.total}`);
+        lines.push(`- Indicative total: ${formatPrice(quote.total)}`);
     }
     lines.push('', 'Please confirm availability.');
     return lines.join('\n');
@@ -273,19 +295,19 @@ function buildRoundTripMessage(state, outboundQuote, returnQuote, combined) {
         '',
         `Trip 1 - Outbound:`,
         ...legDetailLines(AIRPORT_LABEL, locationLabel, state.outbound, outboundQuote),
-        outboundQuote.total !== null ? `- Fare: ${CURRENCY_SYMBOL}${outboundQuote.total}` : null,
+        outboundQuote.total !== null ? `- Fare: ${formatPrice(outboundQuote.total)}` : null,
         '',
         `Trip 2 - Return:`,
         ...legDetailLines(locationLabel, AIRPORT_LABEL, state.returnTrip, returnQuote),
-        returnQuote.total !== null ? `- Fare: ${CURRENCY_SYMBOL}${returnQuote.total}` : null,
+        returnQuote.total !== null ? `- Fare: ${formatPrice(returnQuote.total)}` : null,
         '',
     ].filter((line) => line !== null);
 
     if (combined.total !== null) {
         lines.push(
-            `- Subtotal: ${CURRENCY_SYMBOL}${combined.subtotal}`,
-            `- Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${CURRENCY_SYMBOL}${combined.discount}`,
-            `- Indicative total: ${CURRENCY_SYMBOL}${combined.total}`,
+            `- Subtotal: ${formatPrice(combined.subtotal)}`,
+            `- Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${formatPrice(combined.discount)}`,
+            `- Indicative total: ${formatPrice(combined.total)}`,
         );
     }
     lines.push('', 'Please confirm availability.');
@@ -460,14 +482,14 @@ export function createBookingCalculator() {
         }
 
         const addOnsList = addOnsListHtml(quote.addOns);
-        const warningHtml = dateTimeWarning ? `<p class="mb-1 text-danger">${dateTimeWarning}</p>` : '';
+        const warningHtml = dateTimeWarning ? `<p class="mb-1 text-danger-emphasis">${dateTimeWarning}</p>` : '';
 
         resultEl.innerHTML = `
             <p class="mb-1"><strong>${quote.vehicle.vehicle}</strong> (up to ${quote.vehicle.capacity} passengers)</p>
-            <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${quote.basePrice}</p>
+            <p class="mb-1">Base fare: ${formatPrice(quote.basePrice)}</p>
             ${eveningSurchargeHtml(quote)}
             ${addOnsList}
-            <p class="fs-4 fw-bold mb-1">Total: ${CURRENCY_SYMBOL}${quote.total}</p>
+            ${totalHtml(quote.total)}
             ${warningHtml}
             <p class="mb-0 text-body-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
         `;
@@ -495,23 +517,23 @@ export function createBookingCalculator() {
             return;
         }
 
-        const warningHtml = dateTimeWarning ? `<p class="mb-1 text-danger">${dateTimeWarning}</p>` : '';
+        const warningHtml = dateTimeWarning ? `<p class="mb-1 text-danger-emphasis">${dateTimeWarning}</p>` : '';
 
         resultEl.innerHTML = `
             <p class="mb-1"><strong>Trip 1 — Outbound</strong> (${outboundQuote.vehicle.vehicle})</p>
-            <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${outboundQuote.basePrice}</p>
+            <p class="mb-1">Base fare: ${formatPrice(outboundQuote.basePrice)}</p>
             ${eveningSurchargeHtml(outboundQuote)}
             ${addOnsListHtml(outboundQuote.addOns)}
-            <p class="mb-2 fw-semibold">Trip 1 total: ${CURRENCY_SYMBOL}${outboundQuote.total}</p>
+            <p class="mb-2 fw-semibold">Trip 1 total: ${formatPrice(outboundQuote.total)}</p>
             <p class="mb-1"><strong>Trip 2 — Return</strong> (${returnQuote.vehicle.vehicle})</p>
-            <p class="mb-1">Base fare: ${CURRENCY_SYMBOL}${returnQuote.basePrice}</p>
+            <p class="mb-1">Base fare: ${formatPrice(returnQuote.basePrice)}</p>
             ${eveningSurchargeHtml(returnQuote)}
             ${addOnsListHtml(returnQuote.addOns)}
-            <p class="mb-2 fw-semibold">Trip 2 total: ${CURRENCY_SYMBOL}${returnQuote.total}</p>
+            <p class="mb-2 fw-semibold">Trip 2 total: ${formatPrice(returnQuote.total)}</p>
             <hr class="my-2">
-            <p class="mb-1">Subtotal: ${CURRENCY_SYMBOL}${combined.subtotal}</p>
-            <p class="mb-1">Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${CURRENCY_SYMBOL}${combined.discount}</p>
-            <p class="fs-4 fw-bold mb-1">Total: ${CURRENCY_SYMBOL}${combined.total}</p>
+            <p class="mb-1">Subtotal: ${formatPrice(combined.subtotal)}</p>
+            <p class="mb-1 ${DISCOUNT_CLASS}"><i class="bi bi-tag-fill me-1" aria-hidden="true"></i>Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${formatPrice(combined.discount)}</p>
+            ${totalHtml(combined.total)}
             ${warningHtml}
             <p class="mb-0 text-body-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
         `;

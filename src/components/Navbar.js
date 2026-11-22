@@ -42,6 +42,12 @@ export function createNavbar() {
         </div>
     </div>
     <style>
+        /* Current page's link (.active, set below) in brand yellow. Bootstrap
+           colors .navbar-nav .nav-link.active from this variable; defining it
+           on .navbar-nav overrides the .navbar default without a specificity fight. */
+        .navbar-nav {
+            --bs-navbar-active-color: var(--bs-warning);
+        }
         .navbar-nav .nav-link,
         .btn-link.language-icon {
             position: relative;

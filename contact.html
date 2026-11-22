@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <load src="partials/head-meta.html" />
     <title>Contact Us | Paul's Taxi</title>
@@ -9,10 +9,10 @@
 <load src="partials/body-top.html" />
 
 <!-- Page subject section -->
-<div class="container-fluid text-light d-flex align-items-center justify-content-left pav-hero-gradient">
-    <div class="text-left">
-        <h1 class="display-4 fw-bold mb-4">Get In Touch</h1>
-        <p class="lead fs-4">
+<div class="bg-dark d-flex align-items-center pav-page-header">
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold mb-4">Get In <span class="text-warning">Touch</span></h1>
+        <p class="lead fs-4 text-body-secondary mb-0">
             Paul's Airport Taxi offers reliable, punctual airport transfers and local rides from Larnaca Airport.
             <br>
             Contact us via WhatsApp for instant quotes and professional service.
@@ -22,28 +22,30 @@
 <!-- Page subject section -->
 
 <!-- Contact Methods Intro section -->
-<div class="container-fluid bg-light text-dark d-flex flex-column align-items-center justify-content-center pt-5 pb-2 scroll-animate">
-    <h2 class="display-6 fw-bold mb-3">Contact Methods</h2>
-    <p class="lead fs-5 text-center">
+<div class="container-fluid bg-body-tertiary d-flex flex-column align-items-center justify-content-center pt-5 pb-2 scroll-animate">
+    <h2 class="display-6 fw-bold mb-3">Contact <span class="text-warning">Methods</span></h2>
+    <p class="lead fs-5 text-body-secondary text-center">
         Choose the contact method that works best for you.
         We're available 24/7 to assist with your transportation needs.</p>
 </div>
 <!-- End Contact Methods Intro section -->
 
 <!-- Contact Cards -->
-<div class="container-fluid pb-5 bg-light scroll-animate">
+<div class="container-fluid pb-5 bg-body-tertiary scroll-animate">
     <div class="row justify-content-center g-4">
         <!-- WhatsApp Card -->
         <div class="col-12 col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm text-center pav-feature-card">
+            <div class="card h-100 shadow-sm bg-body-secondary text-center pav-feature-card">
                 <div class="card-body d-flex flex-column">
-                    <i class="bi bi-whatsapp text-success fs-1 mb-3"></i>
+                    <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3 pav-service-icon">
+                        <i class="bi bi-whatsapp text-warning"></i>
+                    </div>
                     <h5 class="card-title fw-bold">WhatsApp</h5>
-                    <p class="card-text small flex-grow-1">
+                    <p class="card-text small text-body-secondary flex-grow-1">
                         Instant quotes and booking.
                         Send us your requirements and get a quick response with pricing and availability.
                     </p>
-                    <a href="%VITE_WHATSAPP_URL%" target="_blank" rel="noopener" class="btn btn-success mt-auto">
+                    <a href="%VITE_WHATSAPP_URL%" target="_blank" rel="noopener" class="btn btn-warning fw-bold mt-auto">
                         Message on WhatsApp
                     </a>
                 </div>
@@ -51,29 +53,33 @@
         </div>
         <!-- Phone Call Card -->
         <div class="col-12 col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm text-center pav-feature-card">
+            <div class="card h-100 shadow-sm bg-body-secondary text-center pav-feature-card">
                 <div class="card-body d-flex flex-column">
-                    <i class="bi bi-telephone-fill text-primary fs-1 mb-3"></i>
+                    <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3 pav-service-icon">
+                        <i class="bi bi-telephone-fill text-warning"></i>
+                    </div>
                     <h5 class="card-title fw-bold">Phone Call</h5>
-                    <p class="card-text small flex-grow-1">
+                    <p class="card-text small text-body-secondary flex-grow-1">
                         Speak directly with our team. Perfect for complex itineraries or special
                         requirements that need detailed discussion.
                     </p>
-                    <a href="%VITE_TEL_HREF%" class="btn btn-primary mt-auto">Call Now</a>
+                    <a href="%VITE_TEL_HREF%" class="btn btn-outline-light mt-auto">Call Now</a>
                 </div>
             </div>
         </div>
         <!-- Email Card -->
         <div class="col-12 col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm text-center pav-feature-card">
+            <div class="card h-100 shadow-sm bg-body-secondary text-center pav-feature-card">
                 <div class="card-body d-flex flex-column">
-                    <i class="bi bi-envelope-fill text-warning fs-1 mb-3"></i>
+                    <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3 pav-service-icon">
+                        <i class="bi bi-envelope-fill text-warning"></i>
+                    </div>
                     <h5 class="card-title fw-bold">Email</h5>
-                    <p class="card-text small flex-grow-1">
+                    <p class="card-text small text-body-secondary flex-grow-1">
                         For detailed queries, corporate accounts, or special requests.
                         We'll respond within 2 hours during business hours.
                     </p>
-                    <a href="%VITE_MAILTO_HREF%" class="btn btn-warning mt-auto">Send Email</a>
+                    <a href="%VITE_MAILTO_HREF%" class="btn btn-outline-light mt-auto">Send Email</a>
                 </div>
             </div>
         </div>
@@ -85,31 +91,31 @@
 <div class="container py-5 scroll-animate">
     <div class="row">
         <div class="col-lg-8">
-            <h2 class="fw-bold mb-3">Send us a Message</h2>
-            <p class="lead mb-4">
+            <h2 class="fw-bold mb-3">Send us a <span class="text-warning">Message</span></h2>
+            <p class="lead text-body-secondary mb-4">
                 Prefer to send a detailed message? Reach out, and we'll get back to you as soon as possible.
                 For urgent requests, we recommend using WhatsApp or calling us directly.
             </p>
             <ul class="list-unstyled">
                 <li class="d-flex align-items-center mb-3">
-                    <i class="bi bi-clock-history fs-4 me-3 text-primary"></i>
+                    <i class="bi bi-clock-history fs-4 me-3 text-warning"></i>
                     <div>
                         <h6 class="fw-bold mb-0">Response Time</h6>
-                        <span>Within 2 hours during business hours</span>
+                        <span class="text-body-secondary">Within 2 hours during business hours</span>
                     </div>
                 </li>
                 <li class="d-flex align-items-center mb-3">
-                    <i class="bi bi-translate fs-4 me-3 text-primary"></i>
+                    <i class="bi bi-translate fs-4 me-3 text-warning"></i>
                     <div>
                         <h6 class="fw-bold mb-0">Languages</h6>
-                        <span>English, Russian, Hebrew</span>
+                        <span class="text-body-secondary">English, Russian, Hebrew</span>
                     </div>
                 </li>
                 <li class="d-flex align-items-center">
-                    <i class="bi bi-calendar-check fs-4 me-3 text-primary"></i>
+                    <i class="bi bi-calendar-check fs-4 me-3 text-warning"></i>
                     <div>
                         <h6 class="fw-bold mb-0">Availability</h6>
-                        <span>24/7 service available</span>
+                        <span class="text-body-secondary">24/7 service available</span>
                     </div>
                 </li>
             </ul>
@@ -119,46 +125,46 @@
 <!-- End Send a Message Section -->
 
 <!-- FAQ Section -->
-<div class="container-fluid bg-light py-5 scroll-animate">
+<div class="container-fluid bg-body-tertiary py-5 scroll-animate">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="fw-bold">Frequently Asked Questions</h2>
-            <p class="lead">Quick answers to common questions about our premium transportation services.</p>
+            <h2 class="fw-bold">Frequently Asked <span class="text-warning">Questions</span></h2>
+            <p class="lead text-body-secondary">Quick answers to common questions about our premium transportation services.</p>
         </div>
         <div class="row g-4">
             <div class="col-md-6">
-                <div class="card h-100 shadow-sm pav-feature-card">
+                <div class="card h-100 shadow-sm bg-body-secondary pav-feature-card">
                     <div class="card-body">
                         <h5 class="card-title fw-bold">How do I book a ride?</h5>
                         <hr class="border-secondary opacity-50 my-3">
-                        <p class="card-text">The easiest way is through WhatsApp - simply send us your pickup location, destination, date, and time. We'll provide an instant quote and confirm your booking within minutes.</p>
+                        <p class="card-text text-body-secondary">The easiest way is through WhatsApp - simply send us your pickup location, destination, date, and time. We'll provide an instant quote and confirm your booking within minutes.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card h-100 shadow-sm pav-feature-card">
+                <div class="card h-100 shadow-sm bg-body-secondary pav-feature-card">
                     <div class="card-body">
                         <h5 class="card-title fw-bold">What vehicles do you offer?</h5>
                         <hr class="border-secondary opacity-50 my-3">
-                        <p class="card-text">We have a premium Mercedes fleet including V-Class (up to 7 passengers) and E-Class (up to 4 passengers). All vehicles feature leather interiors, climate control, free WiFi, and premium amenities.</p>
+                        <p class="card-text text-body-secondary">We have a premium Mercedes fleet including V-Class (up to 7 passengers) and E-Class (up to 4 passengers). All vehicles feature leather interiors, climate control, free WiFi, and premium amenities.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card h-100 shadow-sm pav-feature-card">
+                <div class="card h-100 shadow-sm bg-body-secondary pav-feature-card">
                     <div class="card-body">
                         <h5 class="card-title fw-bold">Are you available 24/7?</h5>
                         <hr class="border-secondary opacity-50 my-3">
-                        <p class="card-text">Yes! We operate 24 hours a day, 7 days a week, including holidays. Whether you have an early morning flight or a late-night arrival, we're here to serve you.</p>
+                        <p class="card-text text-body-secondary">Yes! We operate 24 hours a day, 7 days a week, including holidays. Whether you have an early morning flight or a late-night arrival, we're here to serve you.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card h-100 shadow-sm pav-feature-card">
+                <div class="card h-100 shadow-sm bg-body-secondary pav-feature-card">
                     <div class="card-body">
                         <h5 class="card-title fw-bold">Do you monitor flights?</h5>
                         <hr class="border-secondary opacity-50 my-3">
-                        <p class="card-text">Absolutely! We track all flights in real-time and adjust pickup times accordingly. If your flight is early or delayed, we'll be there when you land - no extra charge for flight delays.</p>
+                        <p class="card-text text-body-secondary">Absolutely! We track all flights in real-time and adjust pickup times accordingly. If your flight is early or delayed, we'll be there when you land - no extra charge for flight delays.</p>
                     </div>
                 </div>
             </div>

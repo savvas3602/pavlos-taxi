@@ -18,9 +18,10 @@
 }
 
 /*
- * Circular badge behind each "Our Services" panel icon (a faint yellow tint
- * behind the yellow glyph on the homepage), echoing the rounded-circle icon
- * badge already used on the Fleet and Airport Transfers pages.
+ * Site-wide circular icon badge: a faint brand-yellow tint behind a yellow
+ * glyph (markup: rounded-circle bg-warning bg-opacity-10 + text-warning icon).
+ * Used for the headline icon of feature cards and feature lists on every page,
+ * so all decorative icons share one size and one color.
  */
 .pav-service-icon {
     width: 4.5rem;
