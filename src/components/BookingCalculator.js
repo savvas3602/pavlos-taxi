@@ -299,10 +299,10 @@ export function createBookingCalculator() {
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="card shadow-lg p-4 p-md-5 pav-feature-card">
+                    <div class="card shadow-lg bg-body-tertiary p-4 p-md-5 pav-feature-card">
                         <div class="card-body">
-                            <h2 class="fw-bold text-center mb-3">Get an Instant Quote</h2>
-                            <p class="fs-5 text-center mb-4">Tell us your trip details and we'll pick the right vehicle and an indicative price.</p>
+                            <h2 class="fw-bold text-center mb-3">Get an <span class="text-warning">Instant Quote</span></h2>
+                            <p class="fs-5 text-body-secondary text-center mb-4">Tell us your trip details and we'll pick the right vehicle and an indicative price.</p>
                             <form id="booking-form" class="row g-3" novalidate>
                                 <div class="col-12">
                                     <div class="d-flex flex-column flex-md-row gap-4 gap-md-2 align-items-md-center position-relative">
@@ -314,7 +314,7 @@ export function createBookingCalculator() {
                                             <label id="booking-pickup-label" for="booking-location">Pick-up</label>
                                         </div>
                                         <div class="d-flex justify-content-center pav-swap-col">
-                                            <button type="button" id="booking-swap-direction" class="btn btn-light shadow-sm" aria-label="Swap pick-up and destination">
+                                            <button type="button" id="booking-swap-direction" class="btn btn-dark border shadow-sm" aria-label="Swap pick-up and destination">
                                                 <i class="bi bi-arrow-left-right d-none d-md-inline" aria-hidden="true"></i>
                                                 <i class="bi bi-arrow-down-up d-inline d-md-none" aria-hidden="true"></i>
                                             </button>
@@ -337,7 +337,7 @@ export function createBookingCalculator() {
                                     </div>
                                     <div class="form-text">Add a return journey back to ${AIRPORT_LABEL} and save ${ROUND_TRIP_DISCOUNT_PERCENT}% on the combined fare.</div>
                                 </div>
-                                <div id="booking-outbound-heading" class="col-12 fw-semibold text-secondary text-uppercase small mt-2" hidden>Trip 1 — Outbound</div>
+                                <div id="booking-outbound-heading" class="col-12 fw-semibold text-body-secondary text-uppercase small mt-2" hidden>Trip 1 — Outbound</div>
                                 <div class="col-12 col-md-6" id="booking-flight-number-field" hidden>
                                     <label for="booking-flight-number" class="form-label fw-semibold">Flight number</label>
                                     <input type="text" id="booking-flight-number" class="form-control text-uppercase"
@@ -348,14 +348,14 @@ export function createBookingCalculator() {
 
                                 <div id="booking-return-section" class="col-12" hidden>
                                     <hr class="my-1">
-                                    <div class="fw-semibold text-secondary text-uppercase small mb-1">Trip 2 — Return</div>
+                                    <div class="fw-semibold text-body-secondary text-uppercase small mb-1">Trip 2 — Return</div>
                                     <div class="row g-3">
                                         ${tripFieldsHtml('return')}
                                     </div>
                                 </div>
                             </form>
 
-                            <div id="booking-result" class="mt-4 p-3 rounded bg-light border" aria-live="polite"></div>
+                            <div id="booking-result" class="mt-4 p-3 rounded bg-body border" aria-live="polite"></div>
 
                             <div class="text-center mt-4">
                                 <a id="booking-cta" href="${WHATSAPP_URL}" target="_blank" rel="noopener"
@@ -442,7 +442,7 @@ export function createBookingCalculator() {
 
     function renderResult(state, quote, dateTimeWarning) {
         if (quote.totalPassengers === 0) {
-            resultEl.innerHTML = `<p class="mb-0 text-secondary">Add at least one passenger to see your vehicle and indicative price.</p>`;
+            resultEl.innerHTML = `<p class="mb-0 text-body-secondary">Add at least one passenger to see your vehicle and indicative price.</p>`;
             return;
         }
 
@@ -454,7 +454,7 @@ export function createBookingCalculator() {
         if (!state.locationId || quote.basePrice === null) {
             resultEl.innerHTML = `
                 <p class="mb-0"><strong>${quote.vehicle.vehicle}</strong> (up to ${quote.vehicle.capacity} passengers) fits your group.</p>
-                <p class="mb-0 text-secondary">Choose a ${locationRoleLabel(state.direction)} to see the indicative price.</p>
+                <p class="mb-0 text-body-secondary">Choose a ${locationRoleLabel(state.direction)} to see the indicative price.</p>
             `;
             return;
         }
@@ -469,13 +469,13 @@ export function createBookingCalculator() {
             ${addOnsList}
             <p class="fs-4 fw-bold mb-1">Total: ${CURRENCY_SYMBOL}${quote.total}</p>
             ${warningHtml}
-            <p class="mb-0 text-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
+            <p class="mb-0 text-body-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
         `;
     }
 
     function renderRoundTripResult(state, outboundQuote, returnQuote, combined, dateTimeWarning) {
         if (outboundQuote.totalPassengers === 0 || returnQuote.totalPassengers === 0) {
-            resultEl.innerHTML = `<p class="mb-0 text-secondary">Add at least one passenger to both trips to see your vehicles and indicative price.</p>`;
+            resultEl.innerHTML = `<p class="mb-0 text-body-secondary">Add at least one passenger to both trips to see your vehicles and indicative price.</p>`;
             return;
         }
 
@@ -490,7 +490,7 @@ export function createBookingCalculator() {
             resultEl.innerHTML = `
                 <p class="mb-1"><strong>Trip 1:</strong> ${outboundQuote.vehicle.vehicle} (up to ${outboundQuote.vehicle.capacity} passengers)</p>
                 <p class="mb-1"><strong>Trip 2:</strong> ${returnQuote.vehicle.vehicle} (up to ${returnQuote.vehicle.capacity} passengers)</p>
-                <p class="mb-0 text-secondary">Choose a location to see the indicative price.</p>
+                <p class="mb-0 text-body-secondary">Choose a location to see the indicative price.</p>
             `;
             return;
         }
@@ -513,7 +513,7 @@ export function createBookingCalculator() {
             <p class="mb-1">Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${CURRENCY_SYMBOL}${combined.discount}</p>
             <p class="fs-4 fw-bold mb-1">Total: ${CURRENCY_SYMBOL}${combined.total}</p>
             ${warningHtml}
-            <p class="mb-0 text-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
+            <p class="mb-0 text-body-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
         `;
     }
 

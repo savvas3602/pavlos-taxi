@@ -2,9 +2,6 @@
 export function createNavbar() {
     const nav = document.createElement('nav');
     nav.className = 'navbar navbar-expand-lg bg-dark sticky-top shadow';
-    // Dark color mode scoped to the navbar: adapts link, subtitle, toggler and
-    // collapsed-menu colors to the dark background.
-    nav.setAttribute('data-bs-theme', 'dark');
     nav.innerHTML = `
     <div class="container-fluid">
         <a class="navbar-brand mb-0 h1 d-flex align-items-center" href="index.html">

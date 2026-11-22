@@ -8,12 +8,19 @@
 }
 
 /*
- * Circular badge behind each "Our Services" panel icon. Panel backgrounds
- * now vary per card, so the icon needs a background of its own — a dark
- * circle keeps the yellow glyph legible no matter what color sits behind it
- * (e.g. the near-identical yellow-on-yellow case) and echoes the same
- * rounded-circle icon badge already used on the Fleet and Airport Transfers
- * pages.
+ * On dark surfaces (the homepage runs in Bootstrap's dark color mode) shadows
+ * barely register, so give the card a faint resting edge - the same
+ * translucent border Bootstrap draws on its own dark cards. Hover/focus still
+ * swaps it for the yellow border above. Light pages keep the transparent one.
+ */
+[data-bs-theme="dark"] .pav-feature-card {
+    border-color: var(--bs-border-color-translucent);
+}
+
+/*
+ * Circular badge behind each "Our Services" panel icon (a faint yellow tint
+ * behind the yellow glyph on the homepage), echoing the rounded-circle icon
+ * badge already used on the Fleet and Airport Transfers pages.
  */
 .pav-service-icon {
     width: 4.5rem;
