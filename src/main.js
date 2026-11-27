@@ -6,6 +6,7 @@ import './styles/theme.css';
 import './styles/custom-cards.css';
 import './styles/scroll-animation.css';
 import './styles/hero.css';
+import './styles/booking-calculator.css';
 
 import { createNavbar } from './components/Navbar.js';
 import { createFooter } from './components/Footer.js';

@@ -2,10 +2,15 @@
 // Renders the "Get an Instant Quote" form: trip direction, location, and
 // per-trip details (date/time, adults, children, luggage, add-ons) drive an
 // auto-selected vehicle + indicative price (src/utils/booking-calculator.js).
+// Luggage and add-ons are optional, so they sit folded inside one
+// "Luggage & add-ons" <details> row per leg (opened automatically once
+// children are added, so child seats aren't missed).
 // When the pick-up is the airport, the customer must give their flight
-// number (so the arrival can be tracked), and can also add a return leg
-// (its own date/time, passengers, luggage, add-ons) for a round trip at a
-// 10% discount on the combined fare. Either way, the visitor sends the
+// number (so the arrival can be tracked), and can also add a return leg for
+// a round trip at a 10% discount on the combined fare. The return leg only
+// asks for its date/time by default ("Same people, luggage & add-ons"
+// starts ticked); unticking it reveals its own passengers/luggage/add-ons,
+// prefilled from the outbound leg. Either way, the visitor sends the
 // result to us as a prefilled WhatsApp message - same backend-free,
 // WhatsApp-to-human booking model the rest of the site already uses.
 import {
@@ -76,14 +81,27 @@ function totalLuggageCount(luggageCounts) {
     return LUGGAGE_SIZES.reduce((sum, size) => sum + (luggageCounts[size.id] || 0), 0);
 }
 
-function updateLuggageHint(els, luggageCounts) {
-    const total = totalLuggageCount(luggageCounts);
-    if (total === 0) {
-        els.luggageTotalEl.textContent = '';
-        return;
+// What the folded "Luggage & add-ons" row shows on its right, so a choice
+// made inside stays visible once it's closed again - e.g. "3 bags · Baby
+// Seat". "Optional" until something is picked.
+const EXTRAS_EMPTY_LABEL = 'Optional';
+
+function extrasSummary(legState) {
+    const parts = [];
+    const bags = totalLuggageCount(legState.luggageCounts);
+    if (bags > 0) {
+        parts.push(`${bags} ${bags === 1 ? 'bag' : 'bags'}`);
     }
-    const unit = total === 1 ? 'piece' : 'pieces';
-    els.luggageTotalEl.textContent = `Total: ${total} ${unit} (${luggageSummary(luggageCounts)})`;
+    ADD_ONS
+        .filter((addOn) => legState.addOnIds.includes(addOn.id))
+        .forEach((addOn) => parts.push(addOn.label));
+    return parts.join(' · ');
+}
+
+function updateExtrasSummary(els, legState) {
+    const summary = extrasSummary(legState);
+    els.extrasValueEl.textContent = summary || EXTRAS_EMPTY_LABEL;
+    els.extrasValueEl.classList.toggle('text-body-secondary', !summary);
 }
 
 // Reads one leg's fields (outbound or return - see legEls()) into the plain
@@ -195,6 +213,27 @@ function totalHtml(total) {
     return `<p class="fs-4 fw-bold mb-1">Total: <span class="text-warning">${formatPrice(total)}</span></p>`;
 }
 
+// One leg of the round-trip summary on a single line ("Outbound · Mercedes
+// E-Class ... €55"), with any evening surcharge/add-ons folded into the
+// leg's price and listed underneath in small print, so nothing priced is
+// hidden but the breakdown stays short.
+function roundTripLegHtml(label, quote) {
+    const included = quote.addOns.map((addOn) => `${addOn.label} +${formatPrice(addOn.price)}`);
+    if (quote.eveningSurcharge) {
+        included.unshift(`<span class="${SURCHARGE_CLASS}"><i class="bi bi-moon-stars-fill me-1" aria-hidden="true"></i>Evening +${formatPrice(quote.eveningSurcharge)}</span>`);
+    }
+    const includedHtml = included.length
+        ? `<p class="mb-1 small text-body-secondary">incl. ${included.join(' · ')}</p>`
+        : '';
+    return `
+        <div class="d-flex justify-content-between gap-2 mb-1">
+            <span><strong>${label}</strong> · ${quote.vehicle.vehicle}</span>
+            <span>${formatPrice(quote.total)}</span>
+        </div>
+        ${includedHtml}
+    `;
+}
+
 // Empty unless the leg's pick-up time is in the evening window (see
 // isEveningPickup() in booking-calculator.js) - shown as its own line in
 // the breakdown, right under the base fare it's added to.
@@ -205,16 +244,21 @@ function eveningSurchargeHtml(quote) {
     return `<p class="mb-1 ${SURCHARGE_CLASS}"><i class="bi bi-moon-stars-fill me-1" aria-hidden="true"></i>${EVENING_SURCHARGE_LABEL}: +${formatPrice(quote.eveningSurcharge)}</p>`;
 }
 
-// Pick-up date/time, adults, children, luggage and add-ons for one leg of
-// the trip - identical shape for the outbound leg and (when round trip is
-// on) the return leg, just with ids/data-trip scoped by `prefix`.
-function tripFieldsHtml(prefix) {
+// The fields of one leg of the trip - identical shape for the outbound leg
+// and (when round trip is on) the return leg, just with ids/data-trip
+// scoped by `prefix`.
+function pickupTimeFieldHtml(prefix, label) {
     return `
         <div class="col-12 col-md-6">
-            <label for="booking-${prefix}-pickup-time" class="form-label fw-semibold">Pick-up date &amp; time</label>
+            <label for="booking-${prefix}-pickup-time" class="form-label fw-semibold">${label}</label>
             <input type="datetime-local" id="booking-${prefix}-pickup-time" class="form-control" min="${nowLocalDateTimeString()}">
             <div id="booking-${prefix}-pickup-time-feedback" class="invalid-feedback"></div>
         </div>
+    `;
+}
+
+function passengerFieldsHtml(prefix) {
+    return `
         <div class="col-6 col-md-3">
             <label for="booking-${prefix}-adults" class="form-label fw-semibold">Adults</label>
             <input type="number" id="booking-${prefix}-adults" class="form-control" min="0" max="${MAX_PASSENGERS}" value="1">
@@ -223,18 +267,32 @@ function tripFieldsHtml(prefix) {
             <label for="booking-${prefix}-children" class="form-label fw-semibold">Children</label>
             <input type="number" id="booking-${prefix}-children" class="form-control" min="0" max="${MAX_PASSENGERS}" value="0">
         </div>
+    `;
+}
+
+// Luggage and add-ons, folded into one optional row (a native <details>,
+// so it needs no JS to open/close and is keyboard/screen-reader friendly
+// as-is). Styles: src/styles/booking-calculator.css.
+function extrasFieldHtml(prefix) {
+    return `
         <div class="col-12">
-            <span class="form-label fw-semibold d-block">Luggage</span>
-            <div class="row g-2">
-                ${luggageCountFieldsHtml(prefix)}
-            </div>
-            <div id="booking-${prefix}-luggage-total" class="form-text"></div>
-        </div>
-        <div class="col-12">
-            <span class="form-label fw-semibold d-block">Add-ons</span>
-            <div class="d-flex flex-wrap gap-3">
-                ${addOnFieldsHtml(prefix)}
-            </div>
+            <details id="booking-${prefix}-extras" class="pav-extras">
+                <summary class="form-control d-flex align-items-center gap-2 pav-extras-summary">
+                    <span class="fw-semibold text-nowrap">Luggage &amp; add-ons</span>
+                    <span id="booking-${prefix}-extras-value" class="ms-auto text-truncate text-body-secondary">${EXTRAS_EMPTY_LABEL}</span>
+                    <i class="bi bi-chevron-down pav-extras-chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="pav-extras-body">
+                    <span class="form-label small fw-semibold d-block">Luggage</span>
+                    <div class="row g-2 mb-3">
+                        ${luggageCountFieldsHtml(prefix)}
+                    </div>
+                    <span class="form-label small fw-semibold d-block">Add-ons</span>
+                    <div class="d-flex flex-wrap column-gap-3">
+                        ${addOnFieldsHtml(prefix)}
+                    </div>
+                </div>
+            </details>
         </div>
     `;
 }
@@ -252,9 +310,11 @@ function legDetailLines(pickup, destination, legState, quote) {
     if (legState.flightNumber) {
         lines.push(`- Flight number: ${legState.flightNumber}`);
     }
+    // Luggage is optional (folded away by default), so 0 bags means "not
+    // told", not "no bags" - worded so the driver doesn't assume the latter.
     lines.push(
         `- Passengers: ${legState.adults} adult(s), ${legState.children} child(ren)`,
-        `- Luggage: ${luggage || 'None'}`,
+        `- Luggage: ${luggage || 'Not specified'}`,
     );
     if (quote.addOns.length) {
         lines.push(`- Add-ons: ${quote.addOns.map((a) => a.label).join(', ')}`);
@@ -321,10 +381,10 @@ export function createBookingCalculator() {
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="card shadow-lg bg-body-tertiary p-4 p-md-5 pav-feature-card">
+                    <div class="card shadow-lg bg-body-tertiary p-1 p-sm-2 p-md-3 pav-feature-card">
                         <div class="card-body">
-                            <h2 class="fw-bold text-center mb-3">Get an <span class="text-warning">Instant Quote</span></h2>
-                            <p class="fs-5 text-body-secondary text-center mb-4">Tell us your trip details and we'll pick the right vehicle and an indicative price.</p>
+                            <h2 class="fw-bold text-center mb-2">Get an <span class="text-warning">Instant Quote</span></h2>
+                            <p class="text-body-secondary text-center mb-4">The right vehicle and price, in seconds.</p>
                             <form id="booking-form" class="row g-3" novalidate>
                                 <div class="col-12">
                                     <div class="d-flex flex-column flex-md-row gap-4 gap-md-2 align-items-md-center position-relative">
@@ -366,20 +426,34 @@ export function createBookingCalculator() {
                                            placeholder="e.g. A3 902" maxlength="${MAX_FLIGHT_NUMBER_LENGTH}" autocomplete="off" autocapitalize="characters" required>
                                     <div class="form-text">Required for airport pick-ups, so we can track your arrival.</div>
                                 </div>
-                                ${tripFieldsHtml('outbound')}
+                                ${pickupTimeFieldHtml('outbound', 'Pick-up date &amp; time')}
+                                ${passengerFieldsHtml('outbound')}
+                                ${extrasFieldHtml('outbound')}
 
                                 <div id="booking-return-section" class="col-12" hidden>
                                     <hr class="my-1">
                                     <div class="fw-semibold text-body-secondary text-uppercase small mb-1">Trip 2 — Return</div>
                                     <div class="row g-3">
-                                        ${tripFieldsHtml('return')}
+                                        ${pickupTimeFieldHtml('return', 'Return date &amp; time')}
+                                        <div class="col-12 col-md-6 d-flex align-items-md-end">
+                                            <div class="form-check mb-md-2">
+                                                <input class="form-check-input" type="checkbox" id="booking-return-same" checked>
+                                                <label class="form-check-label" for="booking-return-same">Same people, luggage &amp; <span class="text-nowrap">add-ons</span></label>
+                                            </div>
+                                        </div>
+                                        <div id="booking-return-details" class="col-12" hidden>
+                                            <div class="row g-3">
+                                                ${passengerFieldsHtml('return')}
+                                                ${extrasFieldHtml('return')}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </form>
 
-                            <div id="booking-result" class="mt-4 p-3 rounded bg-body border" aria-live="polite"></div>
+                            <div id="booking-result" class="mt-3 p-3 rounded bg-body border" aria-live="polite"></div>
 
-                            <div class="text-center mt-4">
+                            <div class="text-center mt-3">
                                 <a id="booking-cta" href="${WHATSAPP_URL}" target="_blank" rel="noopener"
                                    class="btn btn-warning btn-lg px-5 fw-bold disabled" aria-disabled="true" tabindex="-1">
                                     Book Now
@@ -408,6 +482,8 @@ export function createBookingCalculator() {
     const flightNumberFieldEl = section.querySelector('#booking-flight-number-field');
     const flightNumberEl = section.querySelector('#booking-flight-number');
     const returnSectionEl = section.querySelector('#booking-return-section');
+    const returnSameEl = section.querySelector('#booking-return-same');
+    const returnDetailsEl = section.querySelector('#booking-return-details');
     const resultEl = section.querySelector('#booking-result');
     const ctaEl = section.querySelector('#booking-cta');
 
@@ -438,8 +514,12 @@ export function createBookingCalculator() {
             adultsEl: section.querySelector(`#booking-${prefix}-adults`),
             childrenEl: section.querySelector(`#booking-${prefix}-children`),
             luggageCountEls: section.querySelectorAll(`.booking-luggage-count[data-trip="${prefix}"]`),
-            luggageTotalEl: section.querySelector(`#booking-${prefix}-luggage-total`),
             addOnEls: section.querySelectorAll(`.booking-addon[data-trip="${prefix}"]`),
+            extrasEl: section.querySelector(`#booking-${prefix}-extras`),
+            extrasValueEl: section.querySelector(`#booking-${prefix}-extras-value`),
+            // Last children count seen, so the extras row opens only as
+            // children go from 0 to 1+ - not again after the visitor closes it.
+            previousChildren: 0,
         };
     }
     const outboundEls = legEls('outbound');
@@ -454,12 +534,46 @@ export function createBookingCalculator() {
         const flightNumber = direction === DIRECTION_AIRPORT_PICKUP
             ? flightNumberEl.value.trim().toUpperCase()
             : '';
+        const outbound = readLegState(outboundEls, locationId);
+        // While "Same people, luggage & add-ons" is ticked, the return
+        // leg is the outbound leg at the return's own date/time.
+        const returnTrip = returnSameEl.checked
+            ? { ...outbound, pickupDateTime: returnEls.pickupTimeEl.value }
+            : readLegState(returnEls, locationId);
         return {
             direction,
             locationId,
-            outbound: { ...readLegState(outboundEls, locationId), flightNumber },
-            returnTrip: readLegState(returnEls, locationId),
+            outbound: { ...outbound, flightNumber },
+            returnTrip,
         };
+    }
+
+    // Children usually need a baby/booster seat, and those live in the
+    // folded extras row - so open it the moment children are added.
+    function openExtrasForChildren(els) {
+        const children = Math.max(0, Number.parseInt(els.childrenEl.value, 10) || 0);
+        if (children > 0 && els.previousChildren === 0) {
+            els.extrasEl.open = true;
+        }
+        els.previousChildren = children;
+    }
+
+    // Unticking "Same people, luggage & add-ons" starts the return
+    // leg's own fields from the outbound values, so only differences need
+    // editing.
+    function copyOutboundToReturn() {
+        returnEls.adultsEl.value = outboundEls.adultsEl.value;
+        returnEls.childrenEl.value = outboundEls.childrenEl.value;
+        returnEls.previousChildren = outboundEls.previousChildren;
+        returnEls.luggageCountEls.forEach((el) => {
+            const outboundEl = Array.from(outboundEls.luggageCountEls).find((o) => o.dataset.sizeId === el.dataset.sizeId);
+            el.value = outboundEl.value;
+        });
+        returnEls.addOnEls.forEach((el) => {
+            const outboundEl = Array.from(outboundEls.addOnEls).find((o) => o.value === el.value);
+            el.checked = outboundEl.checked;
+        });
+        returnEls.extrasEl.open = outboundEls.extrasEl.open;
     }
 
     function renderResult(state, quote, dateTimeWarning) {
@@ -520,19 +634,12 @@ export function createBookingCalculator() {
         const warningHtml = dateTimeWarning ? `<p class="mb-1 text-danger-emphasis">${dateTimeWarning}</p>` : '';
 
         resultEl.innerHTML = `
-            <p class="mb-1"><strong>Trip 1 — Outbound</strong> (${outboundQuote.vehicle.vehicle})</p>
-            <p class="mb-1">Base fare: ${formatPrice(outboundQuote.basePrice)}</p>
-            ${eveningSurchargeHtml(outboundQuote)}
-            ${addOnsListHtml(outboundQuote.addOns)}
-            <p class="mb-2 fw-semibold">Trip 1 total: ${formatPrice(outboundQuote.total)}</p>
-            <p class="mb-1"><strong>Trip 2 — Return</strong> (${returnQuote.vehicle.vehicle})</p>
-            <p class="mb-1">Base fare: ${formatPrice(returnQuote.basePrice)}</p>
-            ${eveningSurchargeHtml(returnQuote)}
-            ${addOnsListHtml(returnQuote.addOns)}
-            <p class="mb-2 fw-semibold">Trip 2 total: ${formatPrice(returnQuote.total)}</p>
-            <hr class="my-2">
-            <p class="mb-1">Subtotal: ${formatPrice(combined.subtotal)}</p>
-            <p class="mb-1 ${DISCOUNT_CLASS}"><i class="bi bi-tag-fill me-1" aria-hidden="true"></i>Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%): -${formatPrice(combined.discount)}</p>
+            ${roundTripLegHtml('Outbound', outboundQuote)}
+            ${roundTripLegHtml('Return', returnQuote)}
+            <div class="d-flex justify-content-between gap-2 mb-1 ${DISCOUNT_CLASS}">
+                <span><i class="bi bi-tag-fill me-1" aria-hidden="true"></i>Round trip discount (${ROUND_TRIP_DISCOUNT_PERCENT}%)</span>
+                <span>-${formatPrice(combined.discount)}</span>
+            </div>
             ${totalHtml(combined.total)}
             ${warningHtml}
             <p class="mb-0 text-body-secondary small">Indicative price — confirmed by our team via WhatsApp.</p>
@@ -554,9 +661,10 @@ export function createBookingCalculator() {
         const roundTrip = roundTripAvailable && roundTripEl.checked;
         outboundHeadingEl.hidden = !roundTrip;
         returnSectionEl.hidden = !roundTrip;
+        returnDetailsEl.hidden = returnSameEl.checked;
 
-        updateLuggageHint(outboundEls, state.outbound.luggageCounts);
-        updateLuggageHint(returnEls, state.returnTrip.luggageCounts);
+        updateExtrasSummary(outboundEls, state.outbound);
+        updateExtrasSummary(returnEls, state.returnTrip);
 
         const outboundQuote = calculateQuote(state.outbound);
         let canBook;
@@ -614,6 +722,17 @@ export function createBookingCalculator() {
 
     const changeEls = [roundTripEl, ...outboundEls.addOnEls, ...returnEls.addOnEls];
     changeEls.forEach((el) => el.addEventListener('change', update));
+
+    [outboundEls, returnEls].forEach((els) => {
+        els.childrenEl.addEventListener('input', () => openExtrasForChildren(els));
+    });
+
+    returnSameEl.addEventListener('change', () => {
+        if (!returnSameEl.checked) {
+            copyOutboundToReturn();
+        }
+        update();
+    });
 
     swapDirectionEl.addEventListener('click', () => {
         direction = direction === DIRECTION_AIRPORT_PICKUP ? DIRECTION_AIRPORT_DESTINATION : DIRECTION_AIRPORT_PICKUP;
