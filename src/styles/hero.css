@@ -63,8 +63,9 @@
 /*
  * Shared page header for interior pages (Contact, Fleet, Services, Airport
  * Transfers). Sits on .bg-dark - the same surface as the navbar and the
- * homepage hero - so the navbar flows straight into it, and the first section
- * below (a .bg-body-tertiary band) marks where the header ends.
+ * homepage hero - so the navbar flows straight into it. Every section below
+ * shares that same dark background too (no alternating grey bands), so the
+ * header runs straight on into the page content.
  */
 .pav-page-header {
     min-height: 50vh;
