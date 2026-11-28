@@ -6,6 +6,12 @@ export const PHONE_NUMBER = '35796699870';
 export const PHONE_DISPLAY = '+357 96699870';
 export const EMAIL = 'paul@airporttaxi.com';
 
+// Public address of the deployed site
+export const SITE_URL = 'https://savvas3602.github.io/pavlos-taxi/';
+
+// Link-preview picture (og:image). scripts/generate-og-image.mjs creates it
+export const OG_IMAGE = { file: 'assets/og-image.jpg', width: 1200, height: 630 };
+
 export const WHATSAPP_URL = `https://wa.me/${PHONE_NUMBER}`;
 export const TEL_HREF = `tel:+${PHONE_NUMBER}`;
 export const MAILTO_HREF = `mailto:${EMAIL}`;

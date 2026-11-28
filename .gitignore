@@ -14,6 +14,8 @@ dist-ssr
 
 # Generated hero image variants (regenerated via the "prebuild"/"predev" script)
 src/assets/hero/
+# Generated link-preview image (same scripts)
+public/assets/og-image.jpg
 
 # Editor directories and files
 .vscode/*
